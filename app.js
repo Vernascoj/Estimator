@@ -1,0 +1,1 @@
+document.getElementById('app').innerText = 'Estimator App Loaded. (UI functionality is React-based placeholder here)'
