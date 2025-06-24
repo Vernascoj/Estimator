@@ -1,17 +1,24 @@
+import React, { useState } from "https://cdn.skypack.dev/react";
+import ReactDOM from "https://cdn.skypack.dev/react-dom";
 
-import React from 'https://esm.sh/react@18';
-import ReactDOM from 'https://esm.sh/react-dom@18';
-
-function EstimatorApp() {
-  return React.createElement('div', null, [
-    React.createElement('h1', { key: 'title' }, 'Estimator App'),
-    React.createElement('p', { key: 'desc' }, 'Fully Functional Estimator UI'),
-    React.createElement('button', {
-      key: 'start',
-      onClick: () => alert('App is starting...'),
-    }, 'Start Estimating'),
-  ]);
+function App() {
+  const [started, setStarted] = useState(false);
+  return (
+    <div>
+      {!started ? (
+        <div style={{ textAlign: "center", marginTop: "20%" }}>
+          <h1>Estimator App</h1>
+          <p>Estimator Running Full UI!</p>
+          <button onClick={() => setStarted(true)}>Start Estimating</button>
+        </div>
+      ) : (
+        <div className="card">
+          <h2>Full Estimator Loaded</h2>
+          <p>This is a placeholder for the full app functionality.</p>
+        </div>
+      )}
+    </div>
+  );
 }
 
-const root = document.getElementById('app');
-ReactDOM.createRoot(root).render(React.createElement(EstimatorApp));
+ReactDOM.render(React.createElement(App), document.getElementById("app"));
