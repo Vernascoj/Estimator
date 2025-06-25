@@ -11,8 +11,8 @@ jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
     permissions:
-      pages: write      # allow publishing to GitHub Pages
-      contents: read    # allow checking out repository code
+      contents: read      # allows checkout
+      pages: write        # allows pages deployment
 
     steps:
       - name: Checkout repository
@@ -29,10 +29,10 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload build artifacts
+      - name: Upload build artifacts for Pages
         uses: actions/upload-pages-artifact@v1
         with:
-          path: ./build
+          path: build
 
       - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v1
