@@ -7,18 +7,21 @@ on:
     branches:
       - main
 
+permissions:
+  contents: read    # allows checkout
+  pages: write      # allows Pages publish
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
-    permissions:
-      contents: read   # to checkout code
-      pages: write     # to publish to GitHub Pages
 
     steps:
       - name: Checkout repository
         uses: actions/checkout@v3
+        with:
+          fetch-depth: 0
 
-      - name: Set up Node.js 18
+      - name: Set up Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -29,10 +32,8 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Upload build folder
-        uses: actions/upload-pages-artifact@v1
-        with:
-          path: build
-
       - name: Deploy to GitHub Pages
-        uses: actions/deploy-pages@v1
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./build
