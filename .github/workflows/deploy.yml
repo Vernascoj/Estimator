@@ -1,42 +1,47 @@
-# .github/workflows/deploy.yml
 name: Deploy to GitHub Pages
 
-# Run on every push to main
 on:
   push:
     branches:
       - main
 
-# Give the Pages action permission to write
 permissions:
-  contents: read     # default for checking out code
-  pages: write       # allow deploying to GitHub Pages
+  contents: read
+  pages: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code (don't reuse the read-only token)
+      # 1. Checkout the entire repo
       - uses: actions/checkout@v3
         with:
           persist-credentials: false
 
-      # 2. Setup Node
+      # 2. Move into the estimator subfolder
+      - name: Change to estimator directory
+        run: cd estimator && pwd
+
+      # 3. Setup Node in that folder
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: '18'
+          working-directory: estimator
 
-      # 3. Install & build
+      # 4. Install & build inside estimator/
       - name: Install dependencies
         run: npm ci
+        working-directory: estimator
+
       - name: Build
         run: npm run build
+        working-directory: estimator
 
-      # 4. Deploy to gh-pages
-      - name: Deploy
+      # 5. Deploy the build/ folder from estimator/
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./build
+          publish_dir: estimator/build
