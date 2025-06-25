@@ -1,4 +1,4 @@
-﻿import React, { useState, useEffect, useMemo } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   Select,
   SelectTrigger,
@@ -7,6 +7,7 @@ import {
   SelectItem,
 } from './components/ui/select';
 import { Button } from './components/ui/button';
+import { Settings } from 'lucide-react';
 import {
   Dialog,
   DialogTrigger,
@@ -20,27 +21,30 @@ import {
 import { Input } from './components/ui/input';
 import { Switch } from './components/ui/switch';
 import { Label } from './components/ui/label';
-import { Settings, Plus, Trash2 } from 'lucide-react';
 
-// Sample employee data hard-coded
+// Sample employee data hard-coded for groupOptions
 const employeesData = [
   { id: '1', firstName: 'Randy', lastName: 'Batchelor', rate: 25.5, group: 'UTAH' },
-  { id: '2', firstName: 'Victor', lastName: 'Dominguez', rate: 26.5, group: 'UTAH' },
-  // … add additional employees …
 ];
-const groupOptions = Array.from(new Set(employeesData.map(e => e.group)));
+const groupOptions = Array.from(new Set(employeesData.map(emp => emp.group)));
 
 function Header({
-  selectedGroup, setSelectedGroup,
-  driveRate, setDriveRate,
-  expensePct, setExpensePct,
-  payrollPct, setPayrollPct,
+  selectedGroup,
+  setSelectedGroup,
+  driveRate,
+  setDriveRate,
+  expensePct,
+  setExpensePct,
+  payrollPct,
+  setPayrollPct,
 }) {
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [darkMode, setDarkMode] = useState(true);
+
   useEffect(() => {
     document.documentElement.classList.toggle('dark', darkMode);
   }, [darkMode]);
+
   return (
     <header className="flex items-center justify-between px-4 py-3 bg-gray-900 dark:bg-white">
       <Select value={selectedGroup} onValueChange={setSelectedGroup}>
@@ -96,3 +100,33 @@ function Header({
               onChange={e => setPayrollPct(parseFloat(e.target.value) || 0)}
             />
           </div>
+          <DialogFooter>
+            <DialogClose>Done</DialogClose>
+          </DialogFooter>
+        </DialogContent>
+      </Dialog>
+    </header>
+  );
+}
+
+export default function App() {
+  const [selectedGroup, setSelectedGroup] = useState(groupOptions[0]);
+  const [driveRate, setDriveRate] = useState(17.5);
+  const [expensePct, setExpensePct] = useState(12.6);
+  const [payrollPct, setPayrollPct] = useState(9.2);
+
+  return (
+    <div className="p-4">
+      <Header
+        selectedGroup={selectedGroup}
+        setSelectedGroup={setSelectedGroup}
+        driveRate={driveRate}
+        setDriveRate={setDriveRate}
+        expensePct={expensePct}
+        setExpensePct={setExpensePct}
+        payrollPct={payrollPct}
+        setPayrollPct={setPayrollPct}
+      />
+    </div>
+  );
+}
