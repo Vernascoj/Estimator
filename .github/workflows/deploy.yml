@@ -1,22 +1,42 @@
-name: Build and Deploy to GitHub Pages
+# .github/workflows/deploy.yml
+
+name: Build and deploy Estimator App to GitHub Pages
+
 on:
   push:
     branches:
       - main
+
 permissions:
-  contents: read
-  pages: write
+  contents: read   # to checkout your code
+  pages: write     # to publish
+
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
+
     steps:
-      - uses: actions/checkout@v3
-      - uses: actions/setup-node@v3
+      - name: Check out repository
+        uses: actions/checkout@v3
+
+      - name: Set up Node.js 18
+        uses: actions/setup-node@v3
         with:
           node-version: '18'
-      - run: npm ci
-      - run: npm run build
-      - uses: actions/upload-pages-artifact@v1
+
+      - name: Install dependencies
+        run: npm ci
+
+      - name: Build
+        run: npm run build
+
+      - name: Configure GitHub Pages
+        uses: actions/configure-pages@v3
+
+      - name: Upload Pages Artifact
+        uses: actions/upload-pages-artifact@v2
         with:
           path: build
-      - uses: actions/deploy-pages@v1
+
+      - name: Deploy
+        uses: actions/deploy-pages@v2
