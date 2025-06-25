@@ -6,37 +6,33 @@ on:
       - main
 
 permissions:
-  contents: read        # allows checkout
-  pages: write          # allows publishing to Pages
-  id-token: write       # needed by peaceiris/actions-gh-pages for authentication
+  contents: read
+  pages: write
+  id-token: write
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout code
       - uses: actions/checkout@v3
         with:
           persist-credentials: false
           fetch-depth: 0
 
-      # 2. Setup Node.js
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 3. Install & build
       - name: Install dependencies
         run: npm ci
 
       - name: Build
         run: npm run build
 
-      # 4. Deploy to GitHub Pages
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
-          github_token: ${{ secrets.GITHUB_TOKEN }}
+          github_token: ${{ secrets.ACTIONS_PUBLISH_TOKEN }}
           publish_dir: ./build
