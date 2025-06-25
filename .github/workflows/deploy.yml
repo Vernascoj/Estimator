@@ -18,30 +18,28 @@ jobs:
       - uses: actions/checkout@v3
         with:
           persist-credentials: false
+          fetch-depth: 0
 
-      # 2. Move into the estimator subfolder
-      - name: Change to estimator directory
-        run: cd estimator && pwd
-
-      # 3. Setup Node in that folder
+      # 2. Setup Node.js
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: '18'
-          working-directory: estimator
 
-      # 4. Install & build inside estimator/
+      # 3. Install & build inside estimator/
       - name: Install dependencies
-        run: npm ci
-        working-directory: estimator
+        run: |
+          cd estimator
+          npm ci
 
       - name: Build
-        run: npm run build
-        working-directory: estimator
+        run: |
+          cd estimator
+          npm run build
 
-      # 5. Deploy the build/ folder from estimator/
+      # 4. Deploy the build/ folder from estimator/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: estimator/build
+          publish_dir: ./estimator/build
