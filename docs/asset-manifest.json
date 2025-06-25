@@ -1,0 +1,13 @@
+{
+  "files": {
+    "main.css": "/Estimator/static/css/main.90f54ec8.css",
+    "main.js": "/Estimator/static/js/main.7ee1f32b.js",
+    "index.html": "/Estimator/index.html",
+    "main.90f54ec8.css.map": "/Estimator/static/css/main.90f54ec8.css.map",
+    "main.7ee1f32b.js.map": "/Estimator/static/js/main.7ee1f32b.js.map"
+  },
+  "entrypoints": [
+    "static/css/main.90f54ec8.css",
+    "static/js/main.7ee1f32b.js"
+  ]
+}
