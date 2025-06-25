@@ -8,18 +8,18 @@ on:
       - main
 
 permissions:
-  contents: read   # to checkout your code
-  pages: write     # to publish
+  contents: read   # for checkout
+  pages: write     # for Pages publish
 
 jobs:
   build-and-deploy:
     runs-on: ubuntu-latest
 
     steps:
-      - name: Check out repository
+      - name: Checkout repository
         uses: actions/checkout@v3
 
-      - name: Set up Node.js 18
+      - name: Setup Node.js
         uses: actions/setup-node@v3
         with:
           node-version: '18'
@@ -30,13 +30,10 @@ jobs:
       - name: Build
         run: npm run build
 
-      - name: Configure GitHub Pages
-        uses: actions/configure-pages@v3
-
-      - name: Upload Pages Artifact
+      - name: Upload Pages artifact
         uses: actions/upload-pages-artifact@v2
         with:
           path: build
 
-      - name: Deploy
+      - name: Deploy to GitHub Pages
         uses: actions/deploy-pages@v2
