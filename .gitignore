@@ -6,3 +6,5 @@ build/
 
 # Environment variables
 .env
+
+.vercel
