@@ -53,9 +53,7 @@ function Header({
         </SelectTrigger>
         <SelectContent>
           {groupOptions.map(g => (
-            <SelectItem key={g} value={g} className="text-black">
-              {g}
-            </SelectItem>
+            <SelectItem key={g} value={g} className="text-black">{g}</SelectItem>
           ))}
         </SelectContent>
       </Select>
@@ -104,56 +102,13 @@ function Header({
         </DialogContent>
       </Dialog>
     </header>
-  );
-}
-
-function EmployeeSelector({ open, onOpenChange, visibleEmployees, includedMap, toggleInclude }) {
-  return (
-    <Dialog open={open} onOpenChange={onOpenChange}>
-      <DialogTrigger asChild>
-        <Button variant="outline">Manage Employees</Button>
-      </DialogTrigger>
-      <DialogContent>
-        <DialogHeader>
-          <DialogTitle>Select Employees</DialogTitle>
-          <DialogDescription>Tap to include/exclude</DialogDescription>
-        </DialogHeader>
-        <div className="space-y-2">
-          {visibleEmployees.map(emp => (
-            <div
-              key={emp.id}
-              onClick={() => toggleInclude(emp.id)}
-              className={`flex items-center p-2 rounded border ${
-                includedMap[emp.id] ? 'bg-blue-50 border-blue-400' : 'opacity-50 border-gray-300'
-              }`}
-            >
-              <span className="flex-1">{emp.firstName} {emp.lastName}</span>
-              <span>${emp.rate.toFixed(2)}/hr</span>
-            </div>
-          ))}
-        </div>
-        <DialogFooter>
-          <DialogClose>Close</DialogClose>
-        </DialogFooter>
-      </DialogContent>
-    </Dialog>
-  );
-}
+);}
 
 export default function App() {
   const [selectedGroup, setSelectedGroup] = useState(groupOptions[0]);
   const [driveRate, setDriveRate] = useState(17.5);
   const [expensePct, setExpensePct] = useState(12.6);
   const [payrollPct, setPayrollPct] = useState(9.2);
-  const [selectorOpen, setSelectorOpen] = useState(false);
-
-  const visibleEmployees = useMemo(
-    () => employeesData.filter(e => e.group === selectedGroup),
-    [selectedGroup]
-  );
-  const initialMap = employeesData.reduce((m, e) => ({ ...m, [e.id]: true }), {});
-  const [includedMap, setIncludedMap] = useState(initialMap);
-  const toggleInclude = id => setIncludedMap(prev => ({ ...prev, [id]: !prev[id] }));
 
   return (
     <div className="p-4">
@@ -166,13 +121,6 @@ export default function App() {
         setExpensePct={setExpensePct}
         payrollPct={payrollPct}
         setPayrollPct={setPayrollPct}
-      />
-      <EmployeeSelector
-        open={selectorOpen}
-        onOpenChange={setSelectorOpen}
-        visibleEmployees={visibleEmployees}
-        includedMap={includedMap}
-        toggleInclude={toggleInclude}
       />
     </div>
   );
