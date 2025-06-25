@@ -1,3 +1,4 @@
+# .github/workflows/deploy.yml
 name: Deploy to GitHub Pages
 
 on:
@@ -14,32 +15,21 @@ jobs:
     runs-on: ubuntu-latest
 
     steps:
-      # 1. Checkout the entire repo
       - uses: actions/checkout@v3
-        with:
-          persist-credentials: false
-          fetch-depth: 0
 
-      # 2. Setup Node.js
       - name: Use Node.js 18
         uses: actions/setup-node@v3
         with:
           node-version: '18'
 
-      # 3. Install & build inside estimator/
       - name: Install dependencies
-        run: |
-          cd estimator
-          npm ci
+        run: npm ci
 
       - name: Build
-        run: |
-          cd estimator
-          npm run build
+        run: npm run build
 
-      # 4. Deploy the build/ folder from estimator/
       - name: Deploy to GitHub Pages
         uses: peaceiris/actions-gh-pages@v3
         with:
           github_token: ${{ secrets.GITHUB_TOKEN }}
-          publish_dir: ./estimator/build
+          publish_dir: ./build
