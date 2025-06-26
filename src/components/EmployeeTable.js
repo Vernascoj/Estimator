@@ -3,49 +3,25 @@ import { Trash2 } from 'lucide-react';
 
 export default function EmployeeTable({ employees, onDelete, onManage }) {
   return (
-    <div>
-      <div className="flex justify-between items-center mb-4">
-        <h3 className="text-xl font-semibold text-white">Employees</h3>
-        <button onClick={onManage} className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600">
-          Manage Employees
+    <div className="bg-white p-4 rounded space-y-2">
+      {employees.map(emp => (
+        <button
+          key={emp.id}
+          onClick={() => onManage(emp.id)}
+          className="w-full flex justify-between items-center bg-gray-100 p-2 rounded hover:bg-gray-200"
+        >
+          <div>
+            <div className="font-medium">{emp.firstName} {emp.lastName}</div>
+            <div className="text-sm text-gray-600">${emp.rate.toFixed(2)}/hr</div>
+          </div>
+          <button
+            onClick={e => { e.stopPropagation(); onDelete(emp.id); }}
+            className="p-1 hover:bg-gray-200 rounded"
+          >
+            <Trash2 className="h-5 w-5 text-red-500" />
+          </button>
         </button>
-      </div>
-      <table className="min-w-full table-auto bg-white dark:bg-gray-800 shadow rounded-lg">
-        <thead className="bg-gray-700">
-          <tr>
-            <th className="px-4 py-2 text-left text-white">Name</th>
-            <th className="px-4 py-2 text-right text-white">Rate</th>
-            <th className="px-4 py-2"></th>
-          </tr>
-        </thead>
-        <tbody>
-          {employees.length === 0 ? (
-            <tr>
-              <td colSpan={3} className="px-4 py-2 text-center text-gray-500">
-                No employees selected.
-              </td>
-            </tr>
-          ) : (
-            employees.map(emp => (
-              <tr
-                key={emp.id}
-                className="odd:bg-gray-100 even:bg-gray-200 dark:odd:bg-gray-800 dark:even:bg-gray-900"
-              >
-                <td className="px-4 py-2 text-white">{emp.firstName} {emp.lastName}</td>
-                <td className="px-4 py-2 text-right text-white">${emp.rate.toFixed(2)}</td>
-                <td className="px-4 py-2 text-right">
-                  <button
-                    onClick={() => onDelete(emp.id)}
-                    className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                  >
-                    <Trash2 className="h-5 w-5 text-red-500" />
-                  </button>
-                </td>
-              </tr>
-            ))
-          )}
-        </tbody>
-      </table>
+      ))}
     </div>
   );
 }

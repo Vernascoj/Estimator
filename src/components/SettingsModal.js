@@ -1,6 +1,14 @@
 import React from 'react';
 
-export default function SettingsModal({ onClose, payrollBurden, avgExpense, profitPercent, setPayrollBurden, setAvgExpense, setProfitPercent }) {
+export default function SettingsModal({
+  onClose,
+  payrollBurden,
+  avgExpense,
+  profitPercent,
+  setPayrollBurden,
+  setAvgExpense,
+  setProfitPercent
+}) {
   return (
     <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={onClose}>
       <div className="bg-white p-6 rounded shadow-lg max-w-md w-full" onClick={e => e.stopPropagation()}>
@@ -11,18 +19,36 @@ export default function SettingsModal({ onClose, payrollBurden, avgExpense, prof
         <div className="space-y-4">
           <div>
             <label className="block mb-1">Payroll Burden (%)</label>
-            <input type="number" step="0.001" value={payrollBurden} onChange={e => setPayrollBurden(Number(e.target.value))} className="w-full border px-2 py-1 rounded text-black" />
+            <input
+              type="number"
+              step="0.1"
+              value={(payrollBurden * 100).toFixed(1)}
+              onChange={e => setPayrollBurden(Number(e.target.value) / 100)}
+              className="w-full border px-2 py-1 rounded text-black"
+            />
           </div>
           <div>
             <label className="block mb-1">Avg Expense (%)</label>
-            <input type="number" step="0.001" value={avgExpense} onChange={e => setAvgExpense(Number(e.target.value))} className="w-full border px-2 py-1 rounded text-black" />
+            <input
+              type="number"
+              step="0.1"
+              value={(avgExpense * 100).toFixed(1)}
+              onChange={e => setAvgExpense(Number(e.target.value) / 100)}
+              className="w-full border px-2 py-1 rounded text-black"
+            />
           </div>
           <div>
             <label className="block mb-1">Profit (%)</label>
-            <input type="number" step="0.01" value={profitPercent} onChange={e => setProfitPercent(Number(e.target.value))} className="w-full border px-2 py-1 rounded text-black" />
+            <input
+              type="number"
+              step="1"
+              value={(profitPercent * 100).toFixed(0)}
+              onChange={e => setProfitPercent(Number(e.target.value) / 100)}
+              className="w-full border px-2 py-1 rounded text-black"
+            />
           </div>
         </div>
       </div>
     </div>
-);
+  );
 }

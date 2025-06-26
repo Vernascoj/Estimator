@@ -48,12 +48,6 @@ export default function Expenses({
           </div>
         ))
       )}
-      <button
-        onClick={onAddExpense}
-        className="mt-2 px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600"
-      >
-        Add Expense
-      </button>
     </div>
   );
 }

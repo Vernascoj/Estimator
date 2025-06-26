@@ -1,104 +1,46 @@
-import React, { useMemo } from 'react';
+import React from 'react';
 import { Trash2 } from 'lucide-react';
-import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
-export default function HoursWorked({
-  entries,
-  onDelete,
-  onReorder,
-  overtimeEnabled,
-  setOvertimeEnabled,
-  hideControls = false
-}) {
-  // Compute OT
-  const computed = useMemo(() => {
-    let cum = 0;
-    return entries.map(entry => {
-      const dur = Number(entry.duration);
-      const start = cum;
-      const end = start + dur;
-      const ot1 = overtimeEnabled ? Math.max(0, Math.min(end, 12) - Math.max(start, 8)) : 0;
-      const ot2 = overtimeEnabled ? Math.max(0, end - Math.max(start, 12)) : 0;
-      cum = end;
-      return { ...entry, dur, ot1, ot2 };
-    });
-  }, [entries, overtimeEnabled]);
-
-  const handleDragEnd = result => {
-    if (!result.destination) return;
-    const list = Array.from(entries);
-    const [moved] = list.splice(result.source.index, 1);
-    list.splice(result.destination.index, 0, moved);
-    onReorder(list);
-  };
-
+export default function HoursWorked({ entries, onDelete, onUpdateEntry, overtimeEnabled }) {
+  let cumulative = 0;
   return (
-    <DragDropContext onDragEnd={handleDragEnd}>
-      <Droppable droppableId="hours">
-        {provided => (
-          <div ref={provided.innerRef} {...provided.droppableProps} className="overflow-x-auto">
-            <table className="min-w-full table-fixed">
-              <thead className="bg-gray-700">
-                <tr>
-                  <th className="w-2/6 px-6 py-3 text-left text-white">Class</th>
-                  <th className="w-2/6 px-6 py-3 text-center text-white">Duration</th>
-                  <th className="w-1/6 px-6 py-3 text-center text-white"></th>
-                  <th className="w-1/6 px-6 py-3 text-right text-white"></th>
-                </tr>
-              </thead>
-              <tbody>
-                {computed.map((entry, idx) => (
-                  <Draggable key={entry.id} draggableId={entry.id} index={idx}>
-                    {prov => (
-                      <tr ref={prov.innerRef} {...prov.draggableProps} {...prov.dragHandleProps}
-                        className="even:bg-gray-50 odd:bg-white dark:even:bg-gray-900 dark:odd:bg-gray-800">
-                        <td className="px-6 py-4">
-                          <select
-                            value={entry.type}
-                            onChange={e => {
-                              const u = [...entries];
-                              u[idx].type = e.target.value;
-                              onReorder(u);
-                            }}
-                            className="px-2 py-1 border rounded"
-                          >
-                            <option>Work</option>
-                            <option>Drive</option>
-                          </select>
-                        </td>
-                        <td className="px-6 py-4 text-center">
-                          <input
-                            type="number"
-                            value={entry.dur}
-                            onChange={e => {
-                              const u = [...entries];
-                              u[idx].duration = Number(e.target.value);
-                              onReorder(u);
-                            }}
-                            className="w-20 px-2 py-1 border rounded text-right"
-                          />
-                        </td>
-                        <td className="px-6 py-4">
-                          <div className="flex flex-col items-center space-y-1">
-                            {entry.ot1 > 0 && <span className="whitespace-nowrap text-blue-600 text-sm">{entry.ot1.toFixed(2)} hr OT 1.5×</span>}
-                            {entry.ot2 > 0 && <span className="whitespace-nowrap text-blue-800 text-sm">{entry.ot2.toFixed(2)} hr OT 2.0×</span>}
-                          </div>
-                        </td>
-                        <td className="px-6 py-4 text-right">
-                          <button onClick={() => onDelete(entry.id)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
-                            <Trash2 className="h-5 w-5 text-red-500" />
-                          </button>
-                        </td>
-                      </tr>
-                    )}
-                  </Draggable>
-                ))}
-                {provided.placeholder}
-              </tbody>
-            </table>
+    <div className="space-y-2">
+      {entries.map(e => {
+        const dur = e.duration;
+        let rem = dur;
+        const reg = overtimeEnabled ? Math.min(rem, Math.max(0, 8 - cumulative)) : dur;
+        rem -= reg;
+        const ot1 = overtimeEnabled ? Math.min(rem, Math.max(0, 12 - (cumulative + reg))) : 0;
+        rem -= ot1;
+        const ot2 = overtimeEnabled ? rem : 0;
+        cumulative += dur;
+
+        return (
+          <div key={e.id} className="flex justify-between items-center bg-white p-2 rounded shadow">
+            <select
+              value={e.type}
+              onChange={ev => onUpdateEntry(e.id, { type: ev.target.value })}
+              className="p-1 border rounded bg-gray-200 text-black"
+            >
+              <option value="Work">Work</option>
+              <option value="Drive">Drive</option>
+            </select>
+            <input
+              type="number"
+              value={dur}
+              readOnly
+              className="w-16 text-center text-black border rounded mx-auto"
+            />
+            <div className="flex flex-col items-center text-sm space-y-1">
+              {ot1 > 0 && <span className="text-red-600">1.5x {ot1}</span>}
+              {ot2 > 0 && <span className="text-red-800">2.0x {ot2}</span>}
+            </div>
+            <button onClick={() => onDelete(e.id)} className="p-1 hover:bg-gray-100 rounded">
+              <Trash2 className="h-5 w-5 text-red-500" />
+            </button>
           </div>
-        )}
-      </Droppable>
-    </DragDropContext>
+        );
+      })}
+    </div>
   );
 }
