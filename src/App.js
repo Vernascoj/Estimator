@@ -1,4 +1,5 @@
 import React, { useState, useMemo, useEffect } from 'react';
+import { Plus } from 'lucide-react';
 import GroupSelector from './components/GroupSelector';
 import SettingsModal from './components/SettingsModal';
 import ManageEmployeesModal from './components/ManageEmployeesModal';
@@ -18,123 +19,129 @@ export default function App() {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState('ATKINS');
-  const [payrollBurden, setPayrollBurden] = useState(9.2);
-  const [expensePercent, setExpensePercent] = useState(12);
-  const [driveTime, setDriveTime] = useState(17.5);
   const [darkMode, setDarkMode] = useState(false);
-  // Start with one hour entry defaulted at 8 hours
-  const [entries, setEntries] = useState(() => [{
-    id: Date.now().toString(),
-    type: 'Work',
-    duration: 8
-  }]);
+
+  // Work entries
+  const [entries, setEntries] = useState([{ id: 'initial', type: 'Work', duration: 8 }]);
   const [overtimeEnabled, setOvertimeEnabled] = useState(true);
 
-  // Expenses state
-  const [perDiemEnabled, setPerDiemEnabled] = useState(false);
-  const [perDiemDays, setPerDiemDays] = useState(1);
+  // Expenses
   const [expenseItems, setExpenseItems] = useState([]);
 
+  // Per Diem
+  const [perDiemEnabled, setPerDiemEnabled] = useState(false);
+  const [perDiemDays, setPerDiemDays] = useState(1);
+
+  // Estimate settings
+  const [payrollBurden] = useState(0.092);
+  const [avgExpense] = useState(0.12);
+  const [driveRate] = useState(17.5);
+  const [profitPercent] = useState(0.2);
+
   const [employees] = useState(employeesData);
-  const groups = useMemo(() => Array.from(new Set(employees.map(emp => emp.group))), [employees]);
-  const employeesInGroup = useMemo(() => employees.filter(emp => emp.group === selectedGroup), [employees, selectedGroup]);
+  const employeesInGroup = useMemo(() =>
+    employees.filter(emp => emp.group === selectedGroup),
+    [employees, selectedGroup]
+  );
 
   const [includedMap, setIncludedMap] = useState({});
   useEffect(() => {
-    const newMap = employeesInGroup.reduce((map, emp) => ({ ...map, [emp.id]: true }), {});
-    setIncludedMap(newMap);
+    const map = {};
+    employeesInGroup.forEach(emp => map[emp.id] = true);
+    setIncludedMap(map);
   }, [employeesInGroup]);
-
   const toggleInclude = id => setIncludedMap(prev => ({ ...prev, [id]: !prev[id] }));
   const selectedEmployees = useMemo(
-    () => employeesInGroup.filter(emp => includedMap[emp.id]), 
+    () => employeesInGroup.filter(emp => includedMap[emp.id]),
     [employeesInGroup, includedMap]
   );
 
-  useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
-  }, [darkMode]);
-
-  const addEntry = () => {
-    const id = Date.now().toString();
-    setEntries(prev => [...prev, { id, type: 'Work', duration: 0 }]);
-  };
+  // Handlers
+  const addEntry = () => setEntries(prev => [...prev, { id: Date.now().toString(), type: 'Work', duration: 0 }]);
   const deleteEntry = id => setEntries(prev => prev.filter(e => e.id !== id));
   const reorderEntries = newList => setEntries(newList);
-
-  // Expense handlers
-  const addExpense = () => {
-    const id = Date.now().toString();
-    setExpenseItems(prev => [...prev, { id, description: '', cost: 0, profitable: false }]);
-  };
-  const updateExpense = (id, changes) => {
-    setExpenseItems(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
-  };
+  const addExpense = () => setExpenseItems(prev => [...prev, { id: Date.now().toString(), description: '', cost: 0, profitable: false }]);
+  const updateExpense = (id, changes) => setExpenseItems(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
   const deleteExpense = id => setExpenseItems(prev => prev.filter(item => item.id !== id));
   const reorderExpenses = newList => setExpenseItems(newList);
 
   return (
     <div className="p-4 dark:bg-gray-800 min-h-screen">
-      <div className="max-w-4xl mx-auto space-y-6">
-        {/* Group & Settings */}
+      {/* Header */}
+      <div className="bg-blue-500 text-white p-4 mb-6 max-w-4xl mx-auto rounded-lg">
         <div className="flex justify-between items-center">
           <GroupSelector value={selectedGroup} onChange={setSelectedGroup} />
-          <button onClick={() => setSettingsOpen(true)} className="px-4 py-2 bg-blue-500 text-white rounded">
+          <button onClick={() => setSettingsOpen(true)} className="px-4 py-2 bg-blue-700 rounded text-white">
             Settings
           </button>
         </div>
-        {settingsOpen && (
-          <SettingsModal
-            onClose={() => setSettingsOpen(false)}
-            payrollBurden={payrollBurden}
-            setPayrollBurden={setPayrollBurden}
-            expensePercent={expensePercent}
-            setExpensePercent={setExpensePercent}
-            driveTime={driveTime}
-            setDriveTime={setDriveTime}
-            darkMode={darkMode}
-            setDarkMode={setDarkMode}
-          />
-        )}
+      </div>
+      {settingsOpen && <SettingsModal />}
+
+      <div className="max-w-4xl mx-auto space-y-6">
         {/* Employees */}
-        <EmployeeTable
-          employees={selectedEmployees}
-          onDelete={toggleInclude}
-          onManage={() => setSelectorOpen(true)}
-        />
-        {selectorOpen && (
-          <ManageEmployeesModal
-            onClose={() => setSelectorOpen(false)}
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
+          <EmployeeTable
+            employees={selectedEmployees}
+            onDelete={toggleInclude}
+            onManage={() => setSelectorOpen(true)}
+          />
+          {selectorOpen && <ManageEmployeesModal
             employees={employeesInGroup}
             includedMap={includedMap}
             onToggleInclude={toggleInclude}
-          />
-        )}
+            onClose={() => setSelectorOpen(false)}
+          />}
+        </div>
+
         {/* Hours Worked */}
-        <HoursWorked
-          entries={entries}
-          onAdd={addEntry}
-          onDelete={deleteEntry}
-          onReorder={reorderEntries}
-          overtimeEnabled={overtimeEnabled}
-          setOvertimeEnabled={setOvertimeEnabled}
-        />
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-white">Hours Worked</h3>
+            <div className="flex items-center space-x-2">
+              <label className="flex items-center space-x-1 text-white">
+                <input type="checkbox" checked={overtimeEnabled} onChange={e => setOvertimeEnabled(e.target.checked)} className="h-4 w-4" />
+                <span>Overtime</span>
+              </label>
+              <button onClick={addEntry} className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center space-x-1">
+                <Plus className="h-4 w-4" /><span>Add Entry</span>
+              </button>
+            </div>
+          </div>
+          <HoursWorked entries={entries} onDelete={deleteEntry} onReorder={reorderEntries} overtimeEnabled={overtimeEnabled} />
+        </div>
+
         {/* Expenses */}
-        <Expenses
-          personCount={selectedEmployees.length}
+        <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
+          <div className="flex justify-between items-center mb-4">
+            <h3 className="text-xl font-semibold text-white">Expenses</h3>
+            <button onClick={addExpense} className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center space-x-1">
+              <Plus className="h-4 w-4" /><span>Add Expense</span>
+            </button>
+          </div>
+          <Expenses
+            expenseItems={expenseItems}
+            onAddExpense={addExpense}
+            onUpdateExpense={updateExpense}
+            onDeleteExpense={deleteExpense}
+            onReorderExpenses={reorderExpenses}
+          />
+        </div>
+
+        {/* Cost Estimate */}
+        <EstimatorReport
+          entries={entries}
+          employees={selectedEmployees}
+          expenseItems={expenseItems}
           perDiemEnabled={perDiemEnabled}
           perDiemDays={perDiemDays}
-          setPerDiemEnabled={setPerDiemEnabled}
-          setPerDiemDays={setPerDiemDays}
-          expenseItems={expenseItems}
-          onAddExpense={addExpense}
-          onUpdateExpense={updateExpense}
-          onDeleteExpense={deleteExpense}
-          onReorderExpenses={reorderExpenses}
+          payrollBurden={payrollBurden}
+          avgExpense={avgExpense}
+          driveRate={driveRate}
+          profitPercent={profitPercent}
         />
-        {/* Report */}
-        <EstimatorReport />
+
       </div>
     </div>
-);
+  );
 }

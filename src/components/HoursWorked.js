@@ -1,18 +1,16 @@
-import React, { useMemo, useState } from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import React, { useMemo } from 'react';
+import { Trash2 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 export default function HoursWorked({
   entries,
-  onAdd,
   onDelete,
   onReorder,
   overtimeEnabled,
-  setOvertimeEnabled
+  setOvertimeEnabled,
+  hideControls = false
 }) {
-  const [summaryOpen, setSummaryOpen] = useState(false);
-
-  // Compute overtime per entry
+  // Compute OT
   const computed = useMemo(() => {
     let cum = 0;
     return entries.map(entry => {
@@ -26,16 +24,6 @@ export default function HoursWorked({
     });
   }, [entries, overtimeEnabled]);
 
-  // Totals aggregation
-  const totals = computed.reduce((acc, e) => {
-    const key = e.type.toLowerCase();
-    const reg = e.dur - e.ot1 - e.ot2;
-    acc[key + 'Reg'] = (acc[key + 'Reg'] || 0) + reg;
-    acc[key + 'Ot1'] = (acc[key + 'Ot1'] || 0) + e.ot1;
-    acc[key + 'Ot2'] = (acc[key + 'Ot2'] || 0) + e.ot2;
-    return acc;
-  }, { workReg:0, workOt1:0, workOt2:0, driveReg:0, driveOt1:0, driveOt2:0 });
-
   const handleDragEnd = result => {
     if (!result.destination) return;
     const list = Array.from(entries);
@@ -45,148 +33,72 @@ export default function HoursWorked({
   };
 
   return (
-    <div className="mt-6">
-      {/* Controls */}
-      <div className="flex justify-end items-center mb-4 space-x-2">
-        <label className="flex items-center space-x-1 text-gray-900 dark:text-gray-100">
-          <input
-            type="checkbox"
-            checked={overtimeEnabled}
-            onChange={e => setOvertimeEnabled(e.target.checked)}
-            className="h-4 w-4"
-          />
-          <span>Overtime</span>
-        </label>
-        <button
-          onClick={onAdd}
-          className="px-4 py-2 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center space-x-1"
-        >
-          <Plus className="h-5 w-5" />
-          <span>Add Entry</span>
-        </button>
-      </div>
-
-      {entries.length === 0 ? (
-        <p className="text-gray-700 dark:text-gray-300">No entries.</p>
-      ) : (
-        <>
-          <DragDropContext onDragEnd={handleDragEnd}>
-            <Droppable droppableId="hours">
-              {provided => (
-                <div
-                  ref={provided.innerRef}
-                  {...provided.droppableProps}
-                  className="overflow-x-auto bg-white dark:bg-gray-800 shadow rounded-lg"
-                >
-                  <table className="min-w-full table-fixed">
-                    <thead className="bg-gray-700">
-                      <tr>
-                        <th className="w-2/6 px-6 py-3 text-left text-white">Class</th>
-                        <th className="w-2/6 px-6 py-3 text-center text-white">Duration</th>
-                        <th className="w-1/6 px-6 py-3 text-center text-white"></th>
-                        <th className="w-1/6 px-6 py-3 text-right text-white"></th>
+    <DragDropContext onDragEnd={handleDragEnd}>
+      <Droppable droppableId="hours">
+        {provided => (
+          <div ref={provided.innerRef} {...provided.droppableProps} className="overflow-x-auto">
+            <table className="min-w-full table-fixed">
+              <thead className="bg-gray-700">
+                <tr>
+                  <th className="w-2/6 px-6 py-3 text-left text-white">Class</th>
+                  <th className="w-2/6 px-6 py-3 text-center text-white">Duration</th>
+                  <th className="w-1/6 px-6 py-3 text-center text-white"></th>
+                  <th className="w-1/6 px-6 py-3 text-right text-white"></th>
+                </tr>
+              </thead>
+              <tbody>
+                {computed.map((entry, idx) => (
+                  <Draggable key={entry.id} draggableId={entry.id} index={idx}>
+                    {prov => (
+                      <tr ref={prov.innerRef} {...prov.draggableProps} {...prov.dragHandleProps}
+                        className="even:bg-gray-50 odd:bg-white dark:even:bg-gray-900 dark:odd:bg-gray-800">
+                        <td className="px-6 py-4">
+                          <select
+                            value={entry.type}
+                            onChange={e => {
+                              const u = [...entries];
+                              u[idx].type = e.target.value;
+                              onReorder(u);
+                            }}
+                            className="px-2 py-1 border rounded"
+                          >
+                            <option>Work</option>
+                            <option>Drive</option>
+                          </select>
+                        </td>
+                        <td className="px-6 py-4 text-center">
+                          <input
+                            type="number"
+                            value={entry.dur}
+                            onChange={e => {
+                              const u = [...entries];
+                              u[idx].duration = Number(e.target.value);
+                              onReorder(u);
+                            }}
+                            className="w-20 px-2 py-1 border rounded text-right"
+                          />
+                        </td>
+                        <td className="px-6 py-4">
+                          <div className="flex flex-col items-center space-y-1">
+                            {entry.ot1 > 0 && <span className="whitespace-nowrap text-blue-600 text-sm">{entry.ot1.toFixed(2)} hr OT 1.5×</span>}
+                            {entry.ot2 > 0 && <span className="whitespace-nowrap text-blue-800 text-sm">{entry.ot2.toFixed(2)} hr OT 2.0×</span>}
+                          </div>
+                        </td>
+                        <td className="px-6 py-4 text-right">
+                          <button onClick={() => onDelete(entry.id)} className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded">
+                            <Trash2 className="h-5 w-5 text-red-500" />
+                          </button>
+                        </td>
                       </tr>
-                    </thead>
-                    <tbody>
-                      {computed.map((entry, idx) => (
-                        <Draggable key={entry.id} draggableId={entry.id} index={idx}>
-                          {prov => (
-                            <tr
-                              ref={prov.innerRef}
-                              {...prov.draggableProps}
-                              {...prov.dragHandleProps}
-                              className="even:bg-gray-50 odd:bg-white dark:even:bg-gray-900 dark:odd:bg-gray-800"
-                            >
-                              <td className="px-6 py-4">
-                                <select
-                                  value={entry.type}
-                                  onChange={e => {
-                                    const u = [...entries];
-                                    u[idx].type = e.target.value;
-                                    onReorder(u);
-                                  }}
-                                  className="px-2 py-1 border rounded"
-                                >
-                                  <option>Work</option>
-                                  <option>Drive</option>
-                                </select>
-                              </td>
-                              <td className="px-6 py-4 text-center">
-                                <input
-                                  type="number"
-                                  value={entry.dur}
-                                  onChange={e => {
-                                    const u = [...entries];
-                                    u[idx].duration = Number(e.target.value);
-                                    onReorder(u);
-                                  }}
-                                  className="w-20 px-2 py-1 border rounded text-right"
-                                />
-                              </td>
-                              {/* Invisible OT column */}
-                              <td className="px-6 py-4">
-                                <div className="flex flex-col items-center space-y-1">
-                                  {entry.ot1 > 0 && (
-                                    <span className="whitespace-nowrap text-blue-600 text-sm">
-                                      {entry.ot1.toFixed(2)} hr OT 1.5×
-                                    </span>
-                                  )}
-                                  {entry.ot2 > 0 && (
-                                    <span className="whitespace-nowrap text-blue-800 text-sm">
-                                      {entry.ot2.toFixed(2)} hr OT 2.0×
-                                    </span>
-                                  )}
-                                </div>
-                              </td>
-                              <td className="px-6 py-4 text-right">
-                                <button
-                                  onClick={() => onDelete(entry.id)}
-                                  className="p-1 hover:bg-gray-200 dark:hover:bg-gray-700 rounded"
-                                >
-                                  <Trash2 className="h-5 w-5 text-red-500" />
-                                </button>
-                              </td>
-                            </tr>
-                          )}
-                        </Draggable>
-                      ))}
-                      {provided.placeholder}
-                    </tbody>
-                  </table>
-                </div>
-              )}
-            </Droppable>
-          </DragDropContext>
-
-          {/* Summary */}
-          <div className="mt-4">
-            <button
-              onClick={() => setSummaryOpen(!summaryOpen)}
-              className="text-blue-600 hover:underline"
-            >
-              {summaryOpen ? 'Hide Summary' : 'Show Summary'}
-            </button>
-            {summaryOpen && (
-              <div className="mt-2 p-4 bg-white dark:bg-gray-900 border border-gray-200 dark:border-gray-700 rounded-lg text-gray-700 dark:text-gray-300">
-                <div className="grid grid-cols-2 gap-4">
-                  <div>
-                    <div className="font-semibold">Work</div>
-                    <div className="flex justify-between"><span>Regular</span><span>{totals.workReg.toFixed(2)} hr.</span></div>
-                    <div className="flex justify-between text-blue-600"><span>OT 1.5×</span><span>{totals.workOt1.toFixed(2)} hr.</span></div>
-                    <div className="flex justify-between text-blue-800"><span>OT 2.0×</span><span>{totals.workOt2.toFixed(2)} hr.</span></div>
-                  </div>
-                  <div>
-                    <div className="font-semibold">Drive</div>
-                    <div className="flex justify-between"><span>Regular</span><span>{totals.driveReg.toFixed(2)} hr.</span></div>
-                    <div className="flex justify-between text-blue-600"><span>OT 1.5×</span><span>{totals.driveOt1.toFixed(2)} hr.</span></div>
-                    <div className="flex justify-between text-blue-800"><span>OT 2.0×</span><span>{totals.driveOt2.toFixed(2)} hr.</span></div>
-                  </div>
-                </div>
-              </div>
-            )}
+                    )}
+                  </Draggable>
+                ))}
+                {provided.placeholder}
+              </tbody>
+            </table>
           </div>
-        </>
-      )}
-    </div>
+        )}
+      </Droppable>
+    </DragDropContext>
   );
 }

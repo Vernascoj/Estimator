@@ -1,21 +1,14 @@
 import React from 'react';
-import { Trash2, Plus } from 'lucide-react';
+import { Trash2 } from 'lucide-react';
 import { DragDropContext, Droppable, Draggable } from 'react-beautiful-dnd';
 
 export default function Expenses({
-  personCount,
-  perDiemEnabled,
-  perDiemDays,
-  setPerDiemEnabled,
-  setPerDiemDays,
   expenseItems,
   onAddExpense,
   onUpdateExpense,
   onDeleteExpense,
   onReorderExpenses
 }) {
-  const perDiemTotal = perDiemEnabled ? personCount * perDiemDays * 50 : 0;
-
   const handleDragEnd = (result) => {
     if (!result.destination) return;
     const reordered = Array.from(expenseItems);
@@ -25,20 +18,7 @@ export default function Expenses({
   };
 
   return (
-    <div className="mt-6 space-y-4">
-      {/* Expenses Header and Add Button */}
-      <div className="flex justify-between items-center">
-        <h3 className="text-lg font-semibold text-white">Expenses</h3>
-        <button
-          onClick={onAddExpense}
-          className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center space-x-1"
-        >
-          <Plus className="h-4 w-4" />
-          <span>Add Expense</span>
-        </button>
-      </div>
-
-      {/* Additional Expenses Table */}
+    <>
       {expenseItems.length === 0 ? (
         <p className="text-gray-300">No additional expenses.</p>
       ) : (
@@ -111,41 +91,6 @@ export default function Expenses({
           </Droppable>
         </DragDropContext>
       )}
-
-      {/* Per Diem Bar Below Entries */}
-      <div
-        className={`w-full flex justify-between items-center p-4 rounded-lg transition-colors ${
-          perDiemEnabled ? 'bg-indigo-500 text-white' : 'bg-gray-300 text-gray-700'
-        }`}
-      >
-        <div className="flex items-center space-x-2">
-          <span className="font-medium">Per Diem</span>
-          {perDiemEnabled && (
-            <>
-              <input
-                type="number"
-                min="1"
-                value={perDiemDays}
-                onChange={e => setPerDiemDays(Number(e.target.value))}
-                className="w-16 px-2 py-1 border rounded text-black"
-              />
-              <span className="text-white">days</span>
-              <span className="text-white">(${perDiemTotal.toFixed(2)})</span>
-            </>
-          )}
-        </div>
-        <label className="flex items-center space-x-1">
-          <input
-            type="checkbox"
-            checked={perDiemEnabled}
-            onChange={e => {
-              setPerDiemEnabled(e.target.checked);
-              if (!perDiemEnabled && perDiemDays < 1) setPerDiemDays(1);
-            }}
-            className="h-5 w-5"
-          />
-        </label>
-      </div>
-    </div>
+    </>
   );
 }
