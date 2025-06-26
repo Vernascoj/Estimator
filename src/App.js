@@ -73,38 +73,57 @@ export default function App() {
     setExpenseItems(prev => prev.filter(item => item.id !== id));
 
   return (
-    <div className="p-4 dark:bg-gray-800 min-h-screen">
+    <div className="p-4 dark:bg-gray-800 min-h-screen relative">
       <div className="max-w-3xl mx-auto space-y-6">
         <div className="flex justify-end">
           <button onClick={() => setSettingsOpen(true)} className="px-3 py-1 bg-gray-600 text-white rounded">
             Settings
           </button>
         </div>
+        {/* Settings Modal */}
         {settingsOpen && (
-          <SettingsModal
-            onClose={() => setSettingsOpen(false)}
-            payrollBurden={payrollBurden}
-            avgExpense={avgExpense}
-            profitPercent={profitPercent}
-            driveRate={driveRate}
-            setPayrollBurden={setPayrollBurden}
-            setAvgExpense={setAvgExpense}
-            setProfitPercent={setProfitPercent}
-            setDriveRate={setDriveRate}
-          />
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-30"
+              onClick={() => setSettingsOpen(false)}
+            />
+            <div className="fixed inset-0 flex items-center justify-center z-40">
+              <SettingsModal
+                onClose={() => setSettingsOpen(false)}
+                payrollBurden={payrollBurden}
+                avgExpense={avgExpense}
+                profitPercent={profitPercent}
+                driveRate={driveRate}
+                setPayrollBurden={setPayrollBurden}
+                setAvgExpense={setAvgExpense}
+                setProfitPercent={setProfitPercent}
+                setDriveRate={setDriveRate}
+              />
+            </div>
+          </>
         )}
 
         <GroupSelector value={selectedGroup} onChange={setSelectedGroup} />
         <EmployeeTable employees={selectedEmployees} onManage={handleManage} onDelete={toggleInclude} />
+
+        {/* Manage Employees Modal */}
         {manageOpen && (
-          <ManageEmployeesModal
-            employees={employeesInGroup}
-            includedMap={includedMap}
-            onToggleInclude={toggleInclude}
-            onSelectAll={selectAll}
-            onDeselectAll={deselectAll}
-            onClose={closeManage}
-          />
+          <>
+            <div
+              className="fixed inset-0 bg-black bg-opacity-50 z-30"
+              onClick={closeManage}
+            />
+            <div className="fixed inset-0 flex items-center justify-center z-40">
+              <ManageEmployeesModal
+                employees={employeesInGroup}
+                includedMap={includedMap}
+                onToggleInclude={toggleInclude}
+                onSelectAll={selectAll}
+                onDeselectAll={deselectAll}
+                onClose={closeManage}
+              />
+            </div>
+          </>
         )}
 
         <div>
