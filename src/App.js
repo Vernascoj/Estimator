@@ -1,127 +1,97 @@
 import React, { useState, useEffect, useMemo } from 'react';
-import {
-  Select,
-  SelectTrigger,
-  SelectValue,
-  SelectContent,
-  SelectItem,
-} from './components/ui/select';
-import { Button } from './components/ui/button';
-import {
-  Dialog,
-  DialogTrigger,
-  DialogContent,
-  DialogHeader,
-  DialogTitle,
-  DialogDescription,
-  DialogFooter,
-  DialogClose,
-} from './components/ui/dialog';
-import { Input } from './components/ui/input';
-import { Switch } from './components/ui/switch';
-import { Label } from './components/ui/label';
+import GroupSelector from './components/GroupSelector';
+import SettingsModal from './components/SettingsModal';
+import ManageEmployeesModal from './components/ManageEmployeesModal';
+import HoursWorked from './components/HoursWorked';
+import EmployeeTable from './components/EmployeeTable';
+import Expenses from './components/Expenses';
+import EstimatorReport from './components/EstimatorReport';
 
-// Sample employee data
-const employeesData = [
-  { id: '1', firstName: 'Randy', lastName: 'Batchelor', rate: 25.5, group: 'UTAH' },
-  { id: '2', firstName: 'Victor', lastName: 'Dominguez', rate: 26.5, group: 'UTAH' },
-];
-const groupOptions = Array.from(new Set(employeesData.map(emp => emp.group)));
-
-function Header({
-  selectedGroup,
-  setSelectedGroup,
-  driveRate,
-  setDriveRate,
-  expensePct,
-  setExpensePct,
-  payrollPct,
-  setPayrollPct,
-}) {
+function App() {
+  const [selectorOpen, setSelectorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
-  const [darkMode, setDarkMode] = useState(true);
+  const [selectedGroup, setSelectedGroup] = useState('ATKINS');
+  const [payrollBurden, setPayrollBurden] = useState(9.2);
+  const [expensePercent, setExpensePercent] = useState(12);
+  const [driveTime, setDriveTime] = useState(17.5);
+  const [darkMode, setDarkMode] = useState(false);
 
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', darkMode);
+    if (darkMode) document.documentElement.classList.add('dark');
+    else document.documentElement.classList.remove('dark');
   }, [darkMode]);
 
+  const [employees, setEmployees] = useState([
+    { id: '1', firstName: 'Randy', lastName: 'Batchelor', rate: 25.5, group: 'ATKINS' },
+    { id: '2', firstName: 'Victor', lastName: 'Dominguez', rate: 26.5, group: 'ATKINS' },
+    { id: '3', firstName: 'Alice',  lastName: 'Johnson',   rate: 28.0, group: 'NORCAL' },
+    { id: '4', firstName: 'Bob',    lastName: 'Smith',     rate: 27.0, group: 'NORCAL' },
+  ]);
+  const [includedMap, setIncludedMap] = useState({});
+  const [employeesInGroup, setEmployeesInGroup] = useState([]);
+
+  useEffect(() => {
+    const filtered = employees.filter(emp => emp.group === selectedGroup);
+    setEmployeesInGroup(filtered);
+    const newMap = filtered.reduce((map, emp) => ({ ...map, [emp.id]: true }), {});
+    setIncludedMap(newMap);
+  }, [selectedGroup, employees]);
+
+
+  const toggleInclude = (id) => {
+    setIncludedMap((prev) => ({ ...prev, [id]: !prev[id] }));
+  };
+
+  const selectedEmployees = useMemo(() => employeesInGroup.filter(emp => includedMap[emp.id]), [employeesInGroup, includedMap]);
+
   return (
-    <header className="flex items-center justify-between px-4 py-3 bg-gray-900 dark:bg-white">
-      <Select value={selectedGroup} onValueChange={setSelectedGroup}>
-        <SelectTrigger className="w-48 text-black">
-          <SelectValue placeholder="Select Group" className="text-black" />
-        </SelectTrigger>
-        <SelectContent>
-          {groupOptions.map(g => (
-            <SelectItem key={g} value={g} className="text-black">{g}</SelectItem>
-          ))}
-        </SelectContent>
-      </Select>
-      <div className="flex items-center space-x-2">
-        <Switch checked={darkMode} onCheckedChange={setDarkMode} />
-        <Label>Dark Mode</Label>
+    <div className="p-4 dark:bg-gray-800 min-h-screen">
+  <div className="max-w-4xl mx-auto px-4 sm:px-6 lg:px-8 space-y-6">
+      <div className="flex justify-between items-center mb-4">
+        <GroupSelector value={selectedGroup} onChange={setSelectedGroup} />
+        <button
+          onClick={() => setSettingsOpen(true)}
+          className="px-4 py-2 bg-blue-500 text-white rounded"
+        >
+          Settings
+        </button>
       </div>
-      <Dialog open={settingsOpen} onOpenChange={setSettingsOpen}>
-        <DialogTrigger asChild>
-          <Button variant="outline">Settings</Button>
-        </DialogTrigger>
-        <DialogContent className="sm:max-w-md">
-          <DialogHeader>
-            <DialogTitle>Settings</DialogTitle>
-            <DialogDescription>Set rates and percentages</DialogDescription>
-          </DialogHeader>
-          <div className="grid grid-cols-2 gap-4 py-4">
-            <Label htmlFor="driveRate">Drive Rate ($/hr)</Label>
-            <Input
-              id="driveRate"
-              type="number"
-              step="0.01"
-              value={driveRate}
-              onChange={e => setDriveRate(parseFloat(e.target.value) || 0)}
-            />
-            <Label htmlFor="expensePct">Avg Expense (%)</Label>
-            <Input
-              id="expensePct"
-              type="number"
-              step="0.1"
-              value={expensePct}
-              onChange={e => setExpensePct(parseFloat(e.target.value) || 0)}
-            />
-            <Label htmlFor="payrollPct">Payroll Burden (%)</Label>
-            <Input
-              id="payrollPct"
-              type="number"
-              step="0.1"
-              value={payrollPct}
-              onChange={e => setPayrollPct(parseFloat(e.target.value) || 0)}
-            />
-          </div>
-          <DialogFooter>
-            <DialogClose>Done</DialogClose>
-          </DialogFooter>
-        </DialogContent>
-      </Dialog>
-    </header>
-);}
 
-export default function App() {
-  const [selectedGroup, setSelectedGroup] = useState(groupOptions[0]);
-  const [driveRate, setDriveRate] = useState(17.5);
-  const [expensePct, setExpensePct] = useState(12.6);
-  const [payrollPct, setPayrollPct] = useState(9.2);
+      {settingsOpen && (
+        <SettingsModal
+          onClose={() => setSettingsOpen(false)}
+          payrollBurden={payrollBurden}
+          setPayrollBurden={setPayrollBurden}
+          expensePercent={expensePercent}
+          setExpensePercent={setExpensePercent}
+          driveTime={driveTime}
+          setDriveTime={setDriveTime}
+          darkMode={darkMode}
+          setDarkMode={setDarkMode}
+        />
+      )}
 
-  return (
-    <div className="p-4">
-      <Header
-        selectedGroup={selectedGroup}
-        setSelectedGroup={setSelectedGroup}
-        driveRate={driveRate}
-        setDriveRate={setDriveRate}
-        expensePct={expensePct}
-        setExpensePct={setExpensePct}
-        payrollPct={payrollPct}
-        setPayrollPct={setPayrollPct}
+      <EmployeeTable
+        employees={selectedEmployees}
+        onDelete={toggleInclude}
+        onManage={() => setSelectorOpen(true)}
       />
+
+      {selectorOpen && (
+        <ManageEmployeesModal
+          onClose={() => setSelectorOpen(false)}
+          employees={employees.filter(emp => emp.group === selectedGroup)}
+          includedMap={includedMap}
+          onToggleInclude={toggleInclude}
+        />
+      )}
+
+      <Expenses />
+      <div className="mt-6"><EstimatorReport /></div>
+  </div>
+      <div className="mt-6"><EstimatorReport /></div>
     </div>
   );
 }
+
+export default App;
