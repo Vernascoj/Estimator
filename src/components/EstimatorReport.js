@@ -11,90 +11,90 @@ export default function EstimatorReport({
   profitPercent,
   setProfitPercent
 }) {
-  const workEntries = entries.filter(e => e.type === 'Work');
-  const totalWork = workEntries.reduce((sum, e) => sum + e.duration, 0);
-  const regHours = Math.min(totalWork, 8);
-  const otHours = Math.max(totalWork - 8, 0);
+  const peopleCount = employees.length;
 
-  const avgRate = employees.length
-    ? employees.reduce((sum, emp) => sum + Number(emp.rate), 0) / employees.length
-    : 0;
+  // Labor calculations
+  let cumulative = 0;
+  let totalReg = 0, totalOt1 = 0, totalOt2 = 0;
+  entries.forEach(e => {
+    const dur = e.duration;
+    let rem = dur;
+    const reg = Math.min(rem, Math.max(0, 8 - cumulative));
+    rem -= reg;
+    const ot1 = Math.min(rem, Math.max(0, 12 - (cumulative + reg)));
+    rem -= ot1;
+    const ot2 = rem;
+    cumulative += dur;
+    totalReg += reg;
+    totalOt1 += ot1;
+    totalOt2 += ot2;
+  });
 
-  const baseRateCost = regHours * avgRate * employees.length;
-  const otCost = otHours * avgRate * 1.5 * employees.length;
-  const payrollCost = (baseRateCost + otCost) * payrollBurden;
-  const totalLaborCost = baseRateCost + otCost + payrollCost;
+  // Total labor cost including overtime
+  const laborCost = employees.reduce((sum, emp) => {
+    return sum
+      + (totalReg * emp.rate)
+      + (totalOt1 * emp.rate * 1.5)
+      + (totalOt2 * emp.rate * 2);
+  }, 0);
+  const payrollCost = laborCost * payrollBurden;
 
-  const avgExpenseCost = totalLaborCost * avgExpense;
+  // Expense calculations
+  const avgExpenseCost = laborCost * avgExpense;
+  const perDiemCost = perDiemEnabled ? peopleCount * perDiemDays * 50 : 0;
+
+  // Sum all additional expenses
+  const additionalCost = expenseItems.reduce((sum, item) => sum + item.cost, 0);
+
+  // Sum profit-flagged expenses for profit calculation
   const profitExpensesCost = expenseItems
     .filter(item => item.profitable)
     .reduce((sum, item) => sum + item.cost, 0);
-  const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
-  const allExpensesCost = expenseItems.reduce((sum, item) => sum + item.cost, 0);
 
-  // Profit only on labor + avg expense + profit-flagged expenses
-  const profitBase = totalLaborCost + avgExpenseCost + profitExpensesCost;
-  const profitAmount = profitBase * profitPercent;
+  // Profit calculation (profit on avgExpense and profit-flagged expenses)
+  const profitBase = laborCost + avgExpenseCost + profitExpensesCost;
+  const profitValue = profitBase * profitPercent;
 
-  const totalJobCost = profitBase + profitAmount + perDiemCost + (allExpensesCost - profitExpensesCost);
+  const totalCost = laborCost
+    + payrollCost
+    + avgExpenseCost
+    + perDiemCost
+    + additionalCost
+    + profitValue;
 
   return (
-    <div className="bg-gray-800 rounded-lg shadow p-4 text-white">
-      <h3 className="text-xl font-semibold mb-4">Cost Estimate</h3>
-      <div className="mb-4 flex items-center space-x-2">
+    <div className="bg-gray-900 text-white p-4 rounded space-y-2">
+      <div className="text-lg font-semibold">Cost Estimate</div>
+      <div>Base Labor Cost: ${laborCost.toFixed(2)}</div>
+      {totalOt1 > 0 && (
+        <div>1.5x Overtime Cost: ${(employees.reduce((sum, emp) => sum + totalOt1 * emp.rate * 1.5, 0)).toFixed(2)}</div>
+      )}
+      {totalOt2 > 0 && (
+        <div>2.0x Overtime Cost: ${(employees.reduce((sum, emp) => sum + totalOt2 * emp.rate * 2, 0)).toFixed(2)}</div>
+      )}
+      <div>Payroll Cost ({(payrollBurden * 100).toFixed(1)}%): ${payrollCost.toFixed(2)}</div>
+      <hr className="border-gray-700" />
+
+      <div>Average Expense ({(avgExpense * 100).toFixed(1)}%): ${avgExpenseCost.toFixed(2)}</div>
+      {perDiemCost > 0 && <div>Per Diem: ${perDiemCost.toFixed(2)}</div>}
+      {additionalCost > 0 && (
+        <div>Additional Expenses: ${additionalCost.toFixed(2)}</div>
+      )}
+      <hr className="border-gray-700" />
+
+      <div className="flex items-center space-x-2">
         <label>Profit %:</label>
         <input
           type="number"
-          value={(profitPercent * 100).toFixed(0)}
+          value={profitPercent * 100}
           onChange={e => setProfitPercent(Number(e.target.value) / 100)}
-          className="w-16 p-1 rounded bg-gray-700 text-white"
+          className="w-16 text-black rounded px-1"
         />
+        <span>Profit $: ${profitValue.toFixed(2)}</span>
       </div>
-      <div className="space-y-2">
-        <div className="flex justify-between">
-          <span>Base Rate</span>
-          <span>${baseRateCost.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Overtime</span>
-          <span>${otCost.toFixed(2)}</span>
-        </div>
-        <div className="flex justify-between">
-          <span>Payroll Burden</span>
-          <span>${payrollCost.toFixed(2)}</span>
-        </div>
+      <hr className="border-gray-700" />
 
-        <div className="border-b border-gray-600 mt-2"></div>
-        {avgExpenseCost > 0 && (
-          <div className="flex justify-between">
-            <span>Average Expense</span>
-            <span>${avgExpenseCost.toFixed(2)}</span>
-          </div>
-        )}
-        {allExpensesCost - profitExpensesCost > 0 && (
-          <div className="flex justify-between">
-            <span>Additional Expenses</span>
-            <span>${(allExpensesCost - profitExpensesCost).toFixed(2)}</span>
-          </div>
-        )}
-        {perDiemCost > 0 && (
-          <div className="flex justify-between">
-            <span>Per Diem</span>
-            <span>${perDiemCost.toFixed(2)}</span>
-          </div>
-        )}
-
-        <div className="border-t border-gray-600 mt-2"></div>
-        <div className="flex justify-between">
-          <span>Profit</span>
-          <span>${profitAmount.toFixed(2)}</span>
-        </div>
-        <div className="border-t border-gray-600 mt-2"></div>
-        <div className="flex justify-between font-bold">
-          <span>Total Job Cost</span>
-          <span>${totalJobCost.toFixed(2)}</span>
-        </div>
-      </div>
+      <div className="text-xl font-bold">Total Estimated Cost: ${totalCost.toFixed(2)}</div>
     </div>
   );
 }

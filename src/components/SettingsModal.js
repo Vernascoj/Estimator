@@ -14,7 +14,7 @@ export default function SettingsModal({
       <div className="bg-white p-6 rounded shadow-lg max-w-md w-full" onClick={e => e.stopPropagation()}>
         <div className="flex justify-between items-center mb-4">
           <h2 className="text-xl font-semibold">Settings</h2>
-          <button onClick={onClose} className="text-gray-600 hover:text-gray-800 text-2xl leading-none">&times;</button>
+          <button onClick={onClose} className="text-gray-600 text-2xl">&times;</button>
         </div>
         <div className="space-y-4">
           <div>

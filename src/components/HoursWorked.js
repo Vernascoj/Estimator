@@ -14,13 +14,12 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, overtime
         rem -= ot1;
         const ot2 = overtimeEnabled ? rem : 0;
         cumulative += dur;
-
         return (
           <div key={e.id} className="flex justify-between items-center bg-white p-2 rounded shadow">
             <select
               value={e.type}
               onChange={ev => onUpdateEntry(e.id, { type: ev.target.value })}
-              className="p-1 border rounded bg-gray-200 text-black"
+              className="border rounded p-1 bg-gray-100"
             >
               <option value="Work">Work</option>
               <option value="Drive">Drive</option>
@@ -28,12 +27,13 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, overtime
             <input
               type="number"
               value={dur}
-              readOnly
-              className="w-16 text-center text-black border rounded mx-auto"
+              onChange={ev => onUpdateEntry(e.id, { duration: Math.max(0, Number(ev.target.value)) })}
+              className="w-16 text-center text-black border rounded mx-4"
             />
-            <div className="flex flex-col items-center text-sm space-y-1">
-              {ot1 > 0 && <span className="text-red-600">1.5x {ot1}</span>}
-              {ot2 > 0 && <span className="text-red-800">2.0x {ot2}</span>}
+            <div className="flex items-center space-x-4">
+              <span className="text-black font-medium">{dur} HR</span>
+              {ot1 > 0 && <span className="text-red-600">1.5x OT: {ot1}</span>}
+              {ot2 > 0 && <span className="text-red-800">2.0x OT: {ot2}</span>}
             </div>
             <button onClick={() => onDelete(e.id)} className="p-1 hover:bg-gray-100 rounded">
               <Trash2 className="h-5 w-5 text-red-500" />
