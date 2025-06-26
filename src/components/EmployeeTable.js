@@ -31,8 +31,8 @@ export default function EmployeeTable({ employees, onDelete, onManage }) {
                 key={emp.id}
                 className="odd:bg-gray-100 even:bg-gray-200 dark:odd:bg-gray-800 dark:even:bg-gray-900"
               >
-                <td className="px-4 py-2 dark:text-white">{emp.firstName} {emp.lastName}</td>
-                <td className="px-4 py-2 text-right dark:text-white">${emp.rate.toFixed(2)}</td>
+                <td className="px-4 py-2 text-white">{emp.firstName} {emp.lastName}</td>
+                <td className="px-4 py-2 text-right text-white">${emp.rate.toFixed(2)}</td>
                 <td className="px-4 py-2 text-right">
                   <button
                     onClick={() => onDelete(emp.id)}

@@ -6,6 +6,7 @@ import ManageEmployeesModal from './components/ManageEmployeesModal';
 import HoursWorked from './components/HoursWorked';
 import EmployeeTable from './components/EmployeeTable';
 import Expenses from './components/Expenses';
+import ExpenseSummary from './components/ExpenseSummary';
 import EstimatorReport from './components/EstimatorReport';
 
 const employeesData = [
@@ -64,6 +65,12 @@ export default function App() {
   const updateExpense = (id, changes) => setExpenseItems(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
   const deleteExpense = id => setExpenseItems(prev => prev.filter(item => item.id !== id));
   const reorderExpenses = newList => setExpenseItems(newList);
+
+  // Per Diem calculation
+  const perDiemTotal = useMemo(
+    () => perDiemEnabled ? selectedEmployees.length * perDiemDays * 50 : 0,
+    [perDiemEnabled, selectedEmployees.length, perDiemDays]
+  );
 
   return (
     <div className="p-4 dark:bg-gray-800 min-h-screen">
@@ -128,6 +135,41 @@ export default function App() {
           />
         </div>
 
+        {/* Expenses Summary */}
+        <ExpenseSummary expenseItems={expenseItems} />
+
+        {/* Per Diem */}
+        <div className={`max-w-4xl mx-auto rounded-lg shadow p-4 transition-colors ${perDiemEnabled ? 'bg-indigo-600' : 'bg-gray-600'}`}>
+          <div className="flex justify-between items-center text-white">
+            <div className="flex items-center space-x-3">
+              <span className="text-lg font-semibold">Per Diem</span>
+              <input
+                type="number"
+                min="1"
+                value={perDiemDays}
+                onChange={e => setPerDiemDays(Number(e.target.value))}
+                className="w-20 px-3 py-1 border rounded text-black"
+                disabled={!perDiemEnabled}
+              />
+              <span>day(s)</span>
+              {perDiemEnabled && (
+                <span className="font-medium">
+                  {selectedEmployees.length} people @ {perDiemDays} days × $50 = ${perDiemTotal.toFixed(2)}
+                </span>
+              )}
+            </div>
+            <label className="flex items-center space-x-2 text-white">
+              <input
+                type="checkbox"
+                checked={perDiemEnabled}
+                onChange={e => setPerDiemEnabled(e.target.checked)}
+                className="h-5 w-5"
+              />
+              <span>{perDiemEnabled ? 'Enabled' : 'Disabled'}</span>
+            </label>
+          </div>
+        </div>
+
         {/* Cost Estimate */}
         <EstimatorReport
           entries={entries}
@@ -143,5 +185,5 @@ export default function App() {
 
       </div>
     </div>
-  );
+);
 }
