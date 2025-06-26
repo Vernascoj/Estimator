@@ -1,75 +1,28 @@
 import React from 'react';
 
-export default function SettingsModal({
-  onClose,
-  payrollBurden,
-  setPayrollBurden,
-  expensePercent,
-  setExpensePercent,
-  driveTime,
-  setDriveTime,
-  darkMode,
-  setDarkMode
-}) {
+export default function SettingsModal({ onClose, payrollBurden, avgExpense, profitPercent, setPayrollBurden, setAvgExpense, setProfitPercent }) {
   return (
-    <div className="fixed inset-0 flex items-center justify-center bg-black bg-opacity-50">
-      <div className="bg-white dark:bg-gray-900 p-6 rounded w-80">
-        <h2 className="text-xl mb-4 text-gray-900 dark:text-gray-100">Settings</h2>
+    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={onClose}>
+      <div className="bg-white p-6 rounded shadow-lg max-w-md w-full" onClick={e => e.stopPropagation()}>
+        <div className="flex justify-between items-center mb-4">
+          <h2 className="text-xl font-semibold">Settings</h2>
+          <button onClick={onClose} className="text-gray-600 hover:text-gray-800 text-2xl leading-none">&times;</button>
+        </div>
         <div className="space-y-4">
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1">
-              Payroll Burden (%)
-            </label>
-            <input
-              type="number"
-              value={payrollBurden}
-              onChange={(e) => setPayrollBurden(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
+            <label className="block mb-1">Payroll Burden (%)</label>
+            <input type="number" step="0.001" value={payrollBurden} onChange={e => setPayrollBurden(Number(e.target.value))} className="w-full border px-2 py-1 rounded text-black" />
           </div>
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1">
-              Average Expenses (%)
-            </label>
-            <input
-              type="number"
-              value={expensePercent}
-              onChange={(e) => setExpensePercent(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
+            <label className="block mb-1">Avg Expense (%)</label>
+            <input type="number" step="0.001" value={avgExpense} onChange={e => setAvgExpense(Number(e.target.value))} className="w-full border px-2 py-1 rounded text-black" />
           </div>
           <div>
-            <label className="block text-gray-700 dark:text-gray-300 mb-1">
-              Drive Time ($/hr)
-            </label>
-            <input
-              type="number"
-              value={driveTime}
-              onChange={(e) => setDriveTime(Number(e.target.value))}
-              className="w-full px-3 py-2 border rounded"
-            />
+            <label className="block mb-1">Profit (%)</label>
+            <input type="number" step="0.01" value={profitPercent} onChange={e => setProfitPercent(Number(e.target.value))} className="w-full border px-2 py-1 rounded text-black" />
           </div>
-          <div className="flex items-center space-x-2">
-            <input
-              id="darkMode"
-              type="checkbox"
-              checked={darkMode}
-              onChange={(e) => setDarkMode(e.target.checked)}
-            />
-            <label htmlFor="darkMode" className="text-gray-700 dark:text-gray-300">
-              Dark Mode
-            </label>
-          </div>
-        </div>
-        <div className="text-right mt-6">
-          <button
-            onClick={onClose}
-            className="px-4 py-2 bg-red-500 text-white rounded"
-          >
-            Close
-          </button>
         </div>
       </div>
     </div>
-  );
+);
 }

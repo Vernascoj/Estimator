@@ -4,9 +4,9 @@ import GroupSelector from './components/GroupSelector';
 import SettingsModal from './components/SettingsModal';
 import ManageEmployeesModal from './components/ManageEmployeesModal';
 import HoursWorked from './components/HoursWorked';
+import HoursSummary from './components/HoursSummary';
 import EmployeeTable from './components/EmployeeTable';
 import Expenses from './components/Expenses';
-import ExpenseSummary from './components/ExpenseSummary';
 import EstimatorReport from './components/EstimatorReport';
 
 const employeesData = [
@@ -20,7 +20,6 @@ export default function App() {
   const [selectorOpen, setSelectorOpen] = useState(false);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [selectedGroup, setSelectedGroup] = useState('ATKINS');
-  const [darkMode, setDarkMode] = useState(false);
 
   // Work entries
   const [entries, setEntries] = useState([{ id: 'initial', type: 'Work', duration: 8 }]);
@@ -34,10 +33,9 @@ export default function App() {
   const [perDiemDays, setPerDiemDays] = useState(1);
 
   // Estimate settings
-  const [payrollBurden] = useState(0.092);
-  const [avgExpense] = useState(0.12);
-  const [driveRate] = useState(17.5);
-  const [profitPercent] = useState(0.2);
+  const [payrollBurden, setPayrollBurden] = useState(0.092);
+  const [avgExpense, setAvgExpense] = useState(0.12);
+  const [profitPercent, setProfitPercent] = useState(0.30); // default 30%
 
   const [employees] = useState(employeesData);
   const employeesInGroup = useMemo(() =>
@@ -61,10 +59,10 @@ export default function App() {
   const addEntry = () => setEntries(prev => [...prev, { id: Date.now().toString(), type: 'Work', duration: 0 }]);
   const deleteEntry = id => setEntries(prev => prev.filter(e => e.id !== id));
   const reorderEntries = newList => setEntries(newList);
+
   const addExpense = () => setExpenseItems(prev => [...prev, { id: Date.now().toString(), description: '', cost: 0, profitable: false }]);
   const updateExpense = (id, changes) => setExpenseItems(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
   const deleteExpense = id => setExpenseItems(prev => prev.filter(item => item.id !== id));
-  const reorderExpenses = newList => setExpenseItems(newList);
 
   // Per Diem calculation
   const perDiemTotal = useMemo(
@@ -75,15 +73,25 @@ export default function App() {
   return (
     <div className="p-4 dark:bg-gray-800 min-h-screen">
       {/* Header */}
-      <div className="bg-blue-500 text-white p-4 mb-6 max-w-4xl mx-auto rounded-lg">
+      <div className="bg-indigo-600 text-white p-4 mb-6 max-w-4xl mx-auto rounded-lg">
         <div className="flex justify-between items-center">
           <GroupSelector value={selectedGroup} onChange={setSelectedGroup} />
-          <button onClick={() => setSettingsOpen(true)} className="px-4 py-2 bg-blue-700 rounded text-white">
+          <button onClick={() => setSettingsOpen(true)} className="px-4 py-2 bg-indigo-800 rounded text-white">
             Settings
           </button>
         </div>
       </div>
-      {settingsOpen && <SettingsModal />}
+      {settingsOpen && (
+        <SettingsModal 
+          onClose={() => setSettingsOpen(false)}
+          payrollBurden={payrollBurden}
+          avgExpense={avgExpense}
+          profitPercent={profitPercent}
+          setPayrollBurden={setPayrollBurden}
+          setAvgExpense={setAvgExpense}
+          setProfitPercent={setProfitPercent}
+        />
+      )}
 
       <div className="max-w-4xl mx-auto space-y-6">
         {/* Employees */}
@@ -93,12 +101,14 @@ export default function App() {
             onDelete={toggleInclude}
             onManage={() => setSelectorOpen(true)}
           />
-          {selectorOpen && <ManageEmployeesModal
-            employees={employeesInGroup}
-            includedMap={includedMap}
-            onToggleInclude={toggleInclude}
-            onClose={() => setSelectorOpen(false)}
-          />}
+          {selectorOpen && (
+            <ManageEmployeesModal
+              employees={employeesInGroup}
+              includedMap={includedMap}
+              onToggleInclude={toggleInclude}
+              onClose={() => setSelectorOpen(false)}
+            />
+          )}
         </div>
 
         {/* Hours Worked */}
@@ -116,14 +126,15 @@ export default function App() {
             </div>
           </div>
           <HoursWorked entries={entries} onDelete={deleteEntry} onReorder={reorderEntries} overtimeEnabled={overtimeEnabled} />
+          <HoursSummary entries={entries} />
         </div>
 
         {/* Expenses */}
         <div className="bg-white dark:bg-gray-700 rounded-lg shadow p-4">
           <div className="flex justify-between items-center mb-4">
             <h3 className="text-xl font-semibold text-white">Expenses</h3>
-            <button onClick={addExpense} className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600 flex items-center space-x-1">
-              <Plus className="h-4 w-4" /><span>Add Expense</span>
+            <button onClick={addExpense} className="px-3 py-1 bg-indigo-500 text-white rounded hover:bg-indigo-600">
+              Add Expense
             </button>
           </div>
           <Expenses
@@ -131,12 +142,8 @@ export default function App() {
             onAddExpense={addExpense}
             onUpdateExpense={updateExpense}
             onDeleteExpense={deleteExpense}
-            onReorderExpenses={reorderExpenses}
-          />
+          /> 
         </div>
-
-        {/* Expenses Summary */}
-        <ExpenseSummary expenseItems={expenseItems} />
 
         {/* Per Diem */}
         <div className={`max-w-4xl mx-auto rounded-lg shadow p-4 transition-colors ${perDiemEnabled ? 'bg-indigo-600' : 'bg-gray-600'}`}>
@@ -179,10 +186,8 @@ export default function App() {
           perDiemDays={perDiemDays}
           payrollBurden={payrollBurden}
           avgExpense={avgExpense}
-          driveRate={driveRate}
           profitPercent={profitPercent}
         />
-
       </div>
     </div>
 );
