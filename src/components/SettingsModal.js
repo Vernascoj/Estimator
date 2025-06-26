@@ -5,48 +5,67 @@ export default function SettingsModal({
   payrollBurden,
   avgExpense,
   profitPercent,
+  driveRate,
   setPayrollBurden,
   setAvgExpense,
-  setProfitPercent
+  setProfitPercent,
+  setDriveRate
 }) {
   return (
-    <div className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center" onClick={onClose}>
-      <div className="bg-white p-6 rounded shadow-lg max-w-md w-full" onClick={e => e.stopPropagation()}>
-        <div className="flex justify-between items-center mb-4">
-          <h2 className="text-xl font-semibold">Settings</h2>
-          <button onClick={onClose} className="text-gray-600 text-2xl">&times;</button>
-        </div>
-        <div className="space-y-4">
+    <div
+      className="fixed inset-0 bg-black bg-opacity-50 flex items-center justify-center"
+      onClick={onClose}
+    >
+      <div
+        className="bg-white dark:bg-gray-800 p-4 rounded w-80"
+        onClick={e => e.stopPropagation()}
+      >
+        <h2 className="text-lg font-semibold mb-4 text-black">Settings</h2>
+        <div className="space-y-3">
           <div>
-            <label className="block mb-1">Payroll Burden (%)</label>
+            <label className="block text-sm text-black">Payroll Burden (%)</label>
             <input
               type="number"
-              step="0.1"
               value={(payrollBurden * 100).toFixed(1)}
               onChange={e => setPayrollBurden(Number(e.target.value) / 100)}
-              className="w-full border px-2 py-1 rounded text-black"
+              className="w-full text-black rounded border p-1"
             />
           </div>
           <div>
-            <label className="block mb-1">Avg Expense (%)</label>
+            <label className="block text-sm text-black">Avg. Expense (%)</label>
             <input
               type="number"
-              step="0.1"
               value={(avgExpense * 100).toFixed(1)}
               onChange={e => setAvgExpense(Number(e.target.value) / 100)}
-              className="w-full border px-2 py-1 rounded text-black"
+              className="w-full text-black rounded border p-1"
             />
           </div>
           <div>
-            <label className="block mb-1">Profit (%)</label>
+            <label className="block text-sm text-black">Profit %</label>
             <input
               type="number"
-              step="1"
-              value={(profitPercent * 100).toFixed(0)}
+              value={(profitPercent * 100).toFixed(1)}
               onChange={e => setProfitPercent(Number(e.target.value) / 100)}
-              className="w-full border px-2 py-1 rounded text-black"
+              className="w-full text-black rounded border p-1"
             />
           </div>
+          <div>
+            <label className="block text-sm text-black">Drive Rate ($/hr)</label>
+            <input
+              type="number"
+              value={driveRate.toFixed(2)}
+              onChange={e => setDriveRate(Number(e.target.value))}
+              className="w-full text-black rounded border p-1"
+            />
+          </div>
+        </div>
+        <div className="mt-4 text-right">
+          <button
+            onClick={onClose}
+            className="px-3 py-1 bg-indigo-500 text-white rounded"
+          >
+            Close
+          </button>
         </div>
       </div>
     </div>
