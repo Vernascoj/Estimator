@@ -39,19 +39,20 @@ export default function EstimatorReport({
   }, 0);
   const payrollCost = laborCost * payrollBurden;
 
+  // Consolidated overtime cost
+  const overtimeCost = employees.reduce((sum, emp) =>
+    sum + (totalOt1 * emp.rate * 1.5) + (totalOt2 * emp.rate * 2),
+  0);
+
   // Expense calculations
   const avgExpenseCost = laborCost * avgExpense;
   const perDiemCost = perDiemEnabled ? peopleCount * perDiemDays * 50 : 0;
-
-  // Sum all additional expenses
   const additionalCost = expenseItems.reduce((sum, item) => sum + item.cost, 0);
 
-  // Sum profit-flagged expenses for profit calculation
+  // Profit calculation
   const profitExpensesCost = expenseItems
     .filter(item => item.profitable)
     .reduce((sum, item) => sum + item.cost, 0);
-
-  // Profit calculation (profit on avgExpense and profit-flagged expenses)
   const profitBase = laborCost + avgExpenseCost + profitExpensesCost;
   const profitValue = profitBase * profitPercent;
 
@@ -65,36 +66,55 @@ export default function EstimatorReport({
   return (
     <div className="bg-gray-900 text-white p-4 rounded space-y-2">
       <div className="text-lg font-semibold">Cost Estimate</div>
-      <div>Base Labor Cost: ${laborCost.toFixed(2)}</div>
-      {totalOt1 > 0 && (
-        <div>1.5x Overtime Cost: ${(employees.reduce((sum, emp) => sum + totalOt1 * emp.rate * 1.5, 0)).toFixed(2)}</div>
+      <div className="flex justify-between">
+        <span>Base Labor Cost:</span>
+        <span>${laborCost.toFixed(2)}</span>
+      </div>
+      {overtimeCost > 0 && (
+        <div className="flex justify-between">
+          <span>Overtime Cost:</span>
+          <span>${overtimeCost.toFixed(2)}</span>
+        </div>
       )}
-      {totalOt2 > 0 && (
-        <div>2.0x Overtime Cost: ${(employees.reduce((sum, emp) => sum + totalOt2 * emp.rate * 2, 0)).toFixed(2)}</div>
-      )}
-      <div>Payroll Cost ({(payrollBurden * 100).toFixed(1)}%): ${payrollCost.toFixed(2)}</div>
+      <div className="flex justify-between">
+        <span>Payroll Cost ({(payrollBurden * 100).toFixed(1)}%):</span>
+        <span>${payrollCost.toFixed(2)}</span>
+      </div>
       <hr className="border-gray-700" />
-
-      <div>Average Expense ({(avgExpense * 100).toFixed(1)}%): ${avgExpenseCost.toFixed(2)}</div>
-      {perDiemCost > 0 && <div>Per Diem: ${perDiemCost.toFixed(2)}</div>}
+      <div className="flex justify-between">
+        <span>Average Expense ({(avgExpense * 100).toFixed(1)}%):</span>
+        <span>${avgExpenseCost.toFixed(2)}</span>
+      </div>
+      {perDiemCost > 0 && (
+        <div className="flex justify-between">
+          <span>Per Diem:</span>
+          <span>${perDiemCost.toFixed(2)}</span>
+        </div>
+      )}
       {additionalCost > 0 && (
-        <div>Additional Expenses: ${additionalCost.toFixed(2)}</div>
+        <div className="flex justify-between">
+          <span>Additional Expenses:</span>
+          <span>${additionalCost.toFixed(2)}</span>
+        </div>
       )}
       <hr className="border-gray-700" />
-
-      <div className="flex items-center space-x-2">
-        <label>Profit %:</label>
-        <input
-          type="number"
-          value={profitPercent * 100}
-          onChange={e => setProfitPercent(Number(e.target.value) / 100)}
-          className="w-16 text-black rounded px-1"
-        />
+      <div className="flex items-center justify-between">
+        <div className="flex items-center space-x-2">
+          <label>Profit %:</label>
+          <input
+            type="number"
+            value={profitPercent * 100}
+            onChange={e => setProfitPercent(Number(e.target.value) / 100)}
+            className="w-16 text-black rounded px-1"
+          />
+        </div>
         <span>Profit $: ${profitValue.toFixed(2)}</span>
       </div>
       <hr className="border-gray-700" />
-
-      <div className="text-xl font-bold">Total Estimated Cost: ${totalCost.toFixed(2)}</div>
+      <div className="flex justify-between text-xl font-bold">
+        <span>Total Estimated Cost:</span>
+        <span>${totalCost.toFixed(2)}</span>
+      </div>
     </div>
   );
 }
