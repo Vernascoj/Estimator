@@ -55,12 +55,12 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                         <span className="ml-2 text-black font-medium">HR</span>
                       </div>
 
-                      <div className="absolute right-20 top-1/2 transform -translate-y-1/2 flex flex-col items-start text-sm text-red-600 space-y-1">
+                      <div className="hidden sm:flex absolute right-20 top-1/2 transform -translate-y-1/2 flex-col items-start text-sm text-red-600 space-y-1">
                         {ot1 > 0 && <span>+{ot1} hr @ 1.5× OT</span>}
                         {ot2 > 0 && <span>+{ot2} hr @ 2.0× OT</span>}
                       </div>
 
-                      <button onClick={() => onDelete(e.id)} className="p-1 hover:bg-gray-100 rounded">
+                      <button onClick={() => onDelete(e.id)} className="p-1 ml-2 sm:ml-4 hover:bg-gray-100 rounded">
                         <Trash2 className="h-5 w-5 text-red-500" />
                       </button>
                     </div>
