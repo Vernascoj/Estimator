@@ -11,7 +11,8 @@ import SettingsModal from './components/SettingsModal';
 import employeesData from './data/employeesData';
 
 export default function App() {
-  const [selectedGroup, setSelectedGroup] = useState('ATKINS');
+  // Default to first group to match your ordering
+  const [selectedGroup, setSelectedGroup] = useState('NorCal');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [driveRate, setDriveRate] = useState(17.5);
   const [entries, setEntries] = useState([{ id: Date.now().toString(), type: 'Work', duration: 8 }]);
@@ -22,65 +23,94 @@ export default function App() {
   const [avgExpense, setAvgExpense] = useState(0.12);
   const [profitPercent, setProfitPercent] = useState(0.30);
 
-  const employeesInGroup = useMemo(() => 
-    employeesData.filter(emp => emp.group === selectedGroup), 
+  // Track Hourly vs Salary per employee
+  const [employeeTypes, setEmployeeTypes] = useState({});
+
+  // Employees filtered by group
+  const employeesInGroup = useMemo(
+    () => employeesData.filter(emp => emp.group === selectedGroup),
     [selectedGroup]
   );
 
+  // Map of which employees are included
   const [includedMap, setIncludedMap] = useState({});
   useEffect(() => {
     const map = {};
-    employeesInGroup.forEach(emp => map[emp.id] = true);
+    employeesInGroup.forEach(emp => { map[emp.id] = true; });
     setIncludedMap(map);
   }, [employeesInGroup]);
 
-  const toggleInclude = id => 
+  // Default employeeTypes to the data's type field
+  useEffect(() => {
+    const initial = {};
+    employeesInGroup.forEach(emp => {
+      initial[emp.id] = emp.type === 'Salary' ? 'Salary' : 'Hourly';
+    });
+    setEmployeeTypes(initial);
+  }, [employeesInGroup]);
+
+  // Toggle type between Hourly and Salary
+  const toggleEmployeeType = id => {
+    setEmployeeTypes(prev => ({
+      ...prev,
+      [id]: prev[id] === 'Hourly' ? 'Salary' : 'Hourly'
+    }));
+  };
+
+  // Include/exclude handlers
+  const toggleInclude = id =>
     setIncludedMap(prev => ({ ...prev, [id]: !prev[id] }));
   const selectAll = () => {
     const map = {};
-    employeesInGroup.forEach(emp => map[emp.id] = true);
+    employeesInGroup.forEach(emp => { map[emp.id] = true; });
     setIncludedMap(map);
   };
   const deselectAll = () => {
     const map = {};
-    employeesInGroup.forEach(emp => map[emp.id] = false);
+    employeesInGroup.forEach(emp => { map[emp.id] = false; });
     setIncludedMap(map);
   };
 
+  // Manage modal
   const [manageOpen, setManageOpen] = useState(false);
-  const handleManage = () => setManageOpen(true);
+  const openManage = () => setManageOpen(true);
   const closeManage = () => setManageOpen(false);
 
-  const selectedEmployees = useMemo(() => 
-    employeesInGroup.filter(emp => includedMap[emp.id]), 
+  // List of currently selected employees
+  const selectedEmployees = useMemo(
+    () => employeesInGroup.filter(emp => includedMap[emp.id]),
     [employeesInGroup, includedMap]
   );
 
-  const addEntry = () => 
+  // Entry handlers
+  const addEntry = () =>
     setEntries(prev => [...prev, { id: Date.now().toString(), type: 'Work', duration: 0 }]);
-  const deleteEntry = id => 
+  const deleteEntry = id =>
     setEntries(prev => prev.filter(e => e.id !== id));
-  const reorderEntries = newList => 
-    setEntries(newList);
-  const updateEntry = (id, changes) => 
+  const reorderEntries = list => setEntries(list);
+  const updateEntry = (id, changes) =>
     setEntries(prev => prev.map(e => e.id === id ? { ...e, ...changes } : e));
 
-  const addExpense = () => 
+  // Expense handlers
+  const addExpense = () =>
     setExpenseItems(prev => [...prev, { id: Date.now().toString(), description: '', cost: 0, profitable: false }]);
-  const updateExpense = (id, changes) => 
+  const updateExpense = (id, changes) =>
     setExpenseItems(prev => prev.map(item => item.id === id ? { ...item, ...changes } : item));
-  const deleteExpense = id => 
+  const deleteExpense = id =>
     setExpenseItems(prev => prev.filter(item => item.id !== id));
 
   return (
     <div className="p-4 dark:bg-gray-800 min-h-screen relative">
       <div className="max-w-3xl mx-auto space-y-6">
+        {/* Settings */}
         <div className="flex justify-end">
-          <button onClick={() => setSettingsOpen(true)} className="px-3 py-1 bg-gray-600 text-white rounded">
+          <button
+            onClick={() => setSettingsOpen(true)}
+            className="px-3 py-1 bg-gray-600 text-white rounded"
+          >
             Settings
           </button>
         </div>
-        {/* Settings Modal */}
         {settingsOpen && (
           <>
             <div
@@ -103,8 +133,17 @@ export default function App() {
           </>
         )}
 
+        {/* Group Selector */}
         <GroupSelector value={selectedGroup} onChange={setSelectedGroup} />
-        <EmployeeTable employees={selectedEmployees} onManage={handleManage} onDelete={toggleInclude} />
+
+        {/* Employee Table */}
+        <EmployeeTable
+          employees={selectedEmployees}
+          onManage={openManage}
+          onDelete={toggleInclude}
+          employeeTypes={employeeTypes}
+          onToggleType={toggleEmployeeType}
+        />
 
         {/* Manage Employees Modal */}
         {manageOpen && (
@@ -126,10 +165,14 @@ export default function App() {
           </>
         )}
 
+        {/* Hours Worked Section */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold text-white">Hours Worked</h2>
-            <button onClick={addEntry} className="px-3 py-1 bg-indigo-500 text-white rounded">
+            <button
+              onClick={addEntry}
+              className="px-3 py-1 bg-indigo-500 text-white rounded"
+            >
               Add Entry
             </button>
           </div>
@@ -143,6 +186,7 @@ export default function App() {
           <HoursSummary entries={entries} />
         </div>
 
+        {/* Per Diem Section */}
         <PerDiem
           enabled={perDiemEnabled}
           days={perDiemDays}
@@ -154,10 +198,14 @@ export default function App() {
           peopleCount={selectedEmployees.length}
         />
 
+        {/* Expenses Section */}
         <div>
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold text-white">Expenses</h2>
-            <button onClick={addExpense} className="px-3 py-1 bg-indigo-500 text-white rounded">
+            <button
+              onClick={addExpense}
+              className="px-3 py-1 bg-indigo-500 text-white rounded"
+            >
               Add Expense
             </button>
           </div>
@@ -168,6 +216,7 @@ export default function App() {
           />
         </div>
 
+        {/* Estimator Report */}
         <EstimatorReport
           entries={entries}
           employees={selectedEmployees}
@@ -179,8 +228,9 @@ export default function App() {
           profitPercent={profitPercent}
           setProfitPercent={setProfitPercent}
           driveRate={driveRate}
+          employeeTypes={employeeTypes}
         />
       </div>
     </div>
-  );
+);
 }
