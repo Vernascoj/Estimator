@@ -1,0 +1,127 @@
+diff --git a/src/App.js b/src/App.js
+index 1234567..89abcde 100644
+--- a/src/App.js
++++ b/src/App.js
+@@ -15,6 +15,14 @@ import React, { useState, useMemo, useEffect } from 'react'
+   const [entries, setEntries] = useState([])
+   // ... existing state
++  // Track Hourly vs Salary for each employee
++  const [employeeTypes, setEmployeeTypes] = useState({})
+
++  // Initialize types whenever group changes
++  useEffect(() => {
++    const initial = {}
++    employeesInGroup.forEach(emp => {
++      initial[emp.id] = employeeTypes[emp.id] || 'Hourly'
++    })
++    setEmployeeTypes(initial)
++  }, [employeesInGroup])
+
++  // Toggle between Hourly and Salary
++  const toggleEmployeeType = id => {
++    setEmployeeTypes(prev => ({
++      ...prev,
++      [id]: prev[id] === 'Hourly' ? 'Salary' : 'Hourly'
++    }))
++  }
+
+   // ... memoized selectedEmployees, handlers, etc.
+
+@@ -80,7 +88,9 @@ export default function App() {
+     />
+
+     <EmployeeTable
+-      employees={selectedEmployees}
++      employees={selectedEmployees}
++      employeeTypes={employeeTypes}
++      onToggleType={toggleEmployeeType}
+       // ... other props
+     />
+
+@@ -95,7 +105,8 @@ export default function App() {
+     />
+
+     <EstimatorReport
+-      entries={entries}
++      entries={entries}
++      employeeTypes={employeeTypes}
+       employees={selectedEmployees}
+       // ... other props
+     />
+diff --git a/src/components/EmployeeTable.jsx b/src/components/EmployeeTable.jsx
+index abcdef0..1234567 100644
+--- a/src/components/EmployeeTable.jsx
++++ b/src/components/EmployeeTable.jsx
+@@ -10,6 +10,14 @@ export default function EmployeeTable({ employees, /* ... */ }) {
+   return (
+     <table className="table-auto w-full">
+       <thead>/* ... */</thead>
++      <thead>
++        <tr>
++          <th>Name</th>
++          <th>Rate</th>
++          <th>Type</th>
++          {/* other headers */}
++        </tr>
++      </thead>
+       <tbody>
+         {employees.map(emp => (
+           <tr key={emp.id} className="border-b">
+@@ -18,6 +26,12 @@ export default function EmployeeTable({ employees, /* ... */ }) {
+             <td>${emp.rate}/hr</td>
++            <td>
++              <button
++                className="px-2 py-1 border rounded"
++                onClick={() => onToggleType(emp.id)}
++              >
++                {employeeTypes[emp.id]}
++              </button>
++            </td>
+             {/* existing cells: remove button, etc. */}
+           </tr>
+         ))}
+diff --git a/src/components/EstimatorReport.jsx b/src/components/EstimatorReport.jsx
+index fedcba9..7654321 100644
+--- a/src/components/EstimatorReport.jsx
++++ b/src/components/EstimatorReport.jsx
+@@ -5,7 +5,12 @@ export default function EstimatorReport({
+   entries,
+   employees,
+   // ... other props
+-}) {
++  employeeTypes,
++  driveRate,
++  payrollBurden,
++  avgExpense,
++  profitPercent
++}) {
+   // Separate hourly vs salary employees
+-  const count = employees.length
++  const hourlyList = employees.filter(e => employeeTypes[e.id] === 'Hourly')
++  const salaryList = employees.filter(e => employeeTypes[e.id] === 'Salary')
+
++  // Flat salary cost: 8h × base rate
++  const salaryCost = salaryList.reduce((sum, e) => sum + e.rate * 8, 0)
+
+   // Compute hours breakdown only for hourlyList.length
+   const { workReg, workOt1, workOt2, driveReg, driveOt1, driveOt2 } =
+     calculateHoursBreakdown(entries, hourlyList.length)
+@@ -30,12 +35,18 @@ export default function EstimatorReport({
+   const laborCost = workReg * 1 + workOt1 * 1.5 + workOt2 * 2
+   const driveCost = driveReg * driveRate + driveOt1 * driveRate * 1.5 + driveOt2 * driveRate * 2
+
+-  const baseCost = laborCost + driveCost
++  // Include salaried employees
++  const baseCost = laborCost + driveCost + salaryCost
+   const burdenCost = baseCost * (payrollBurden / 100)
+   const expenseCost = baseCost * (avgExpense / 100)
+   const profitCost = (baseCost + burdenCost + expenseCost) * (profitPercent / 100)
+   const totalCost = baseCost + burdenCost + expenseCost + profitCost
+
+   return (
+     <div>
++      {/* Display salaryCost in summary */}
++      <div>Salary Cost: ${salaryCost.toFixed(2)}</div>
+       {/* existing breakdown UI */}
+     </div>
+   )
