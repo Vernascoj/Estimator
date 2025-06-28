@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 
-export default function HoursSummary({ entries }) {
+export default function HoursSummary({ entries , overtimeEnabled}) {
   const [collapsed, setCollapsed] = useState(true);
 
   // Calculate totals
@@ -9,6 +9,14 @@ export default function HoursSummary({ entries }) {
   let driveReg = 0, driveOt1 = 0, driveOt2 = 0;
 
   entries.forEach(e => {
+    if (!overtimeEnabled) {
+      // All hours as regular when overtime disabled
+      if (e.type === 'Work') workReg += e.duration;
+      else if (e.type === 'Drive') driveReg += e.duration;
+      cumulative += e.duration;
+      return;
+    }
+    
     const dur = e.duration;
     let rem = dur;
     // regular

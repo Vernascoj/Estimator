@@ -199,7 +199,7 @@ export default function App() {
             onReorder={reorderEntries}
             overtimeEnabled
            overtimeEnabled={overtimeEnabled}/>
-          <HoursSummary entries={entries} />
+          <HoursSummary entries={entries}  overtimeEnabled={overtimeEnabled}/>
         </div>
 
         {/* Per Diem Section */}
