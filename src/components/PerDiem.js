@@ -28,6 +28,7 @@ export default function PerDiem({
             <label className="text-gray-700">Days:</label>
             <input
               type="number"
+              onFocus={e => e.target.select()}
               defaultValue={days}
               min={1}
               onBlur={e => onDaysChange(Math.max(1, Number(e.target.value)))}

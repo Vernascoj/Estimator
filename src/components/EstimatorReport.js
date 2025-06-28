@@ -165,6 +165,7 @@ const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
           <label>Profit %:</label>
           <input
             type="number"
+              onFocus={e => e.target.select()}
             className="w-16 text-black rounded px-1"
             defaultValue={(profitPercent * 100).toFixed(1)}
             onBlur={e => setProfitPercent(Number(e.target.value) / 100)}
