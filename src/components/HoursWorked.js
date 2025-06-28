@@ -45,13 +45,27 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                         <option value="Drive">Drive</option>
                       </select>
 
-                      <div className="flex items-center">
+                                            <div className="flex items-center space-x-1">
+                        <button
+                          onClick={() => onUpdateEntry(e.id, { duration: Math.max(0, dur - 1) })}
+                          className="px-2 py-1 bg-gray-200 rounded"
+                        >
+                          –
+                        </button>
                         <input
-                          type="number"
+    type="number"
                           value={dur}
                           onChange={ev => onUpdateEntry(e.id, { duration: Math.max(0, Number(ev.target.value)) })}
                           className="w-16 text-center text-black border rounded"
-                        />
+                        
+    className="border p-1 rounded text-center w-16"
+/>
+                        <button
+                          onClick={() => onUpdateEntry(e.id, { duration: dur + 1 })}
+                          className="px-2 py-1 bg-gray-200 rounded"
+                        >
+                          +
+                        </button>
                         <span className="ml-2 text-black font-medium">HR</span>
                       </div>
 
