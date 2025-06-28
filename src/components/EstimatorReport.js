@@ -64,11 +64,12 @@ const payrollCost = costWithBurden * payrollBurden;
 // Total Labor before avg expense & profit
 const totalLabor = costWithBurden + otCost;
 
-// === Load totalLabor for average expense & profit ===
-const totalCost = totalLabor / (1 - (avgExpense + profitPercent));
-const avgExpenseCost = totalCost * avgExpense;
-const profitValue = totalCost * profitPercent;
-
+// === Load base total for expense & profit ===
+const baseTotal = totalLabor / (1 - (avgExpense + profitPercent));
+const avgExpenseCost = baseTotal * avgExpense;
+const profitValue = baseTotal * profitPercent;
+// === Final cost including extras ===
+const finalCost = baseTotal + perDiemCost + additionalExpenses;
 // Totals
 const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
 
@@ -167,7 +168,7 @@ const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
       <hr className="border-gray-700" />
       <div className="flex justify-between text-2xl font-bold">
         <span>Total Cost:</span>
-        <span>${totalCost.toFixed(2)}</span>
+        <span>${finalCost.toFixed(2)}</span>
       </div>
     </div>
   );
