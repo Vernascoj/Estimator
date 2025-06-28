@@ -18,7 +18,7 @@ export default function Expenses({ expenseItems, onUpdateExpense, onDeleteExpens
             />
             <input
               type="number"
-              value={item.cost}
+              defaultValue={item.cost}
               onChange={e => onUpdateExpense(item.id, { cost: Number(e.target.value) })}
               className="w-24 px-2 py-1 border rounded text-black text-right"
             />

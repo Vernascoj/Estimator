@@ -23,7 +23,7 @@ export default function App() {
   const [perDiemEnabled, setPerDiemEnabled] = useState(false);
   const [perDiemDays, setPerDiemDays] = useState(1);
   const [payrollBurden, setPayrollBurden] = useState(0.092);
-  const [avgExpense, setAvgExpense] = useState(0.12);
+  const [avgExpense, setAvgExpense] = useState(0.175);
   const [profitPercent, setProfitPercent] = useState(0.30);
 
   // Track Hourly vs Salary per employee

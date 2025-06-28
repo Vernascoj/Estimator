@@ -54,7 +54,7 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                         </button>
                         <input
     type="number"
-                          value={dur}
+                          defaultValue={dur}
                           onChange={ev => onUpdateEntry(e.id, { duration: Math.max(0, Number(ev.target.value)) })}
                           className="w-16 text-center text-black border rounded"
                         
