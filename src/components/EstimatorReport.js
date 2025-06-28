@@ -166,8 +166,8 @@ const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
           <input
             type="number"
             className="w-16 text-black rounded px-1"
-            value={profitPercent * 100}
-            onChange={e => setProfitPercent(Number(e.target.value) / 100)}
+            defaultValue={(profitPercent * 100).toFixed(1)}
+            onBlur={e => setProfitPercent(Number(e.target.value) / 100)}
           />
         </div>
         <span>Profit $: ${profitValue.toFixed(2)}</span>

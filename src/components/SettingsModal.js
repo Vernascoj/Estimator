@@ -24,37 +24,25 @@ export default function SettingsModal({
         <div className="space-y-3">
           <div>
             <label className="block text-sm text-black">Payroll Burden (%)</label>
-            <input
-              type="number"
-              value={(payrollBurden * 100).toFixed(1)}
-              onChange={e => setPayrollBurden(Number(e.target.value) / 100)}
+            <input type="number" defaultValue={(payrollBurden * 100).toFixed(1)} onBlur={e => setPayrollBurden(Number(e.target.value) / 100)}
               className="w-full text-black rounded border p-1"
             />
           </div>
           <div>
             <label className="block text-sm text-black">Avg. Expense (%)</label>
-            <input
-              type="number"
-              value={(avgExpense * 100).toFixed(1)}
-              onChange={e => setAvgExpense(Number(e.target.value) / 100)}
+            <input type="number" defaultValue={(avgExpense * 100).toFixed(1)} onBlur={e => setAvgExpense(Number(e.target.value) / 100)}
               className="w-full text-black rounded border p-1"
             />
           </div>
           <div>
             <label className="block text-sm text-black">Profit %</label>
-            <input
-              type="number"
-              value={(profitPercent * 100).toFixed(1)}
-              onChange={e => setProfitPercent(Number(e.target.value) / 100)}
+            <input type="number" defaultValue={(profitPercent * 100).toFixed(1)} onBlur={e => setProfitPercent(Number(e.target.value) / 100)}
               className="w-full text-black rounded border p-1"
             />
           </div>
           <div>
             <label className="block text-sm text-black">Drive Rate ($/hr)</label>
-            <input
-              type="number"
-              value={driveRate.toFixed(2)}
-              onChange={e => setDriveRate(Number(e.target.value))}
+            <input type="number" defaultValue={driveRate.toFixed(2)} onBlur={e => setDriveRate(Number(e.target.value))}
               className="w-full text-black rounded border p-1"
             />
           </div>

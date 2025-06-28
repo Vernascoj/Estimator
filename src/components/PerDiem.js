@@ -28,9 +28,9 @@ export default function PerDiem({
             <label className="text-gray-700">Days:</label>
             <input
               type="number"
-              value={days}
+              defaultValue={days}
               min={1}
-              onChange={e => onDaysChange(Math.max(1, Number(e.target.value)))}
+              onBlur={e => onDaysChange(Math.max(1, Number(e.target.value)))}
               className="w-20 text-center text-gray-800 border rounded p-1"
             />
           </div>
