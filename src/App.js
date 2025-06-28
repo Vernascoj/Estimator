@@ -103,7 +103,7 @@ export default function App() {
     setExpenseItems(prev => prev.filter(item => item.id !== id));
 
   return (
-    <div className="p-4 dark:bg-gray-800 min-h-screen relative">
+    <div className="p-4 bg-gray-800 min-h-screen relative">
       <div className="max-w-3xl mx-auto space-y-6">
         {/* Settings */}
         <div className="flex justify-end">
