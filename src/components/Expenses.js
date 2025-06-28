@@ -22,15 +22,6 @@ export default function Expenses({ expenseItems, onUpdateExpense, onDeleteExpens
               onChange={e => onUpdateExpense(item.id, { cost: Number(e.target.value) })}
               className="w-24 px-2 py-1 border rounded text-black text-right"
             />
-            <label className="flex items-center space-x-1">
-              <input
-                type="checkbox"
-                checked={item.profitable}
-                onChange={e => onUpdateExpense(item.id, { profitable: e.target.checked })}
-                className="h-4 w-4"
-              />
-              <span>Profit?</span>
-            </label>
             <button
               onClick={() => onDeleteExpense(item.id)}
               className="p-1 ml-2 sm:ml-4 text-red-500 hover:text-red-700 transition rounded"
