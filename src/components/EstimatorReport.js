@@ -39,31 +39,38 @@ export default function EstimatorReport({
   });
 
   // Salary cost at flat 8 hours
-  const salaryCost = salaryList.reduce((sum, emp) => sum + emp.rate * 8, 0);
+const salaryCost = salaryList.reduce((sum, emp) => sum + emp.rate * 8, 0);
 
-  // Base cost = regular work + regular drive
-  const baseCost = workReg * empRateSumHourly + driveReg * driveRate * hourlyList.length;
-  // Overtime cost
-  const otCost =
-    workOt1 * empRateSumHourly * 1.5 +
-    workOt2 * empRateSumHourly * 2 +
-    driveOt1 * driveRate * 1.5 * hourlyList.length +
-    driveOt2 * driveRate * 2 * hourlyList.length;
+// Base cost = regular work + regular drive
+const baseCost = workReg * empRateSumHourly + driveReg * driveRate * hourlyList.length;
 
-  // Burden & expenses
-  const payrollCost = (baseCost + otCost + salaryCost) * payrollBurden;
-  const avgExpenseCost = (baseCost + otCost + salaryCost) * avgExpense;
-  const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
-  const additionalExpenses = expenseItems.reduce((sum, item) => sum + item.cost, 0);
+// Overtime cost
+const otCost =
+  workOt1 * empRateSumHourly * 1.5 +
+  workOt2 * empRateSumHourly * 2 +
+  driveOt1 * driveRate * 1.5 * hourlyList.length +
+  driveOt2 * driveRate * 2 * hourlyList.length;
 
-  // Profit
-  const profitBase = baseCost + otCost + salaryCost + avgExpenseCost + additionalExpenses;
-  const profitValue = profitBase * profitPercent;
+// Per-diem & any extra line-item expenses (unchanged)
+// Per-diem & any extra line-item expenses (unchanged)
+const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
+const additionalExpenses = expenseItems.reduce((sum, item) => sum + item.cost, 0);
 
-  // Totals
-  const totalLabor = baseCost + otCost + salaryCost + payrollCost;
-  const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
-  const totalCost = totalLabor + totalExpenses + profitValue;
+// === Load base+salary for payroll burden ===
+const laborBase = baseCost + salaryCost;
+const costWithBurden = laborBase / (1 - payrollBurden);
+const payrollCost = costWithBurden * payrollBurden;
+
+// Total Labor before avg expense & profit
+const totalLabor = costWithBurden + otCost;
+
+// === Load totalLabor for average expense & profit ===
+const totalCost = totalLabor / (1 - (avgExpense + profitPercent));
+const avgExpenseCost = totalCost * avgExpense;
+const profitValue = totalCost * profitPercent;
+
+// Totals
+const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
 
   const [labCollapsed, setLabCollapsed] = useState(false);
   const [expCollapsed, setExpCollapsed] = useState(false);
@@ -84,10 +91,12 @@ export default function EstimatorReport({
         {!labCollapsed && (
           <div className="mt-2 ml-4 space-y-1 text-sm">
             {/* Base Rate combining regular & drive */}
+            {baseCost > 0 && (
             <div className="flex justify-between">
               <span>Base (Regular + Drive)</span>
               <span>${baseCost.toFixed(2)}</span>
             </div>
+          )}
             {/* Show Overtime only if any */}
             {otCost > 0 && (
               <div className="flex justify-between">
