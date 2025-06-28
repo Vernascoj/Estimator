@@ -15,12 +15,14 @@ export default function App() {
   const [selectedGroup, setSelectedGroup] = useState('NorCal');
   const [settingsOpen, setSettingsOpen] = useState(false);
   const [driveRate, setDriveRate] = useState(17.5);
+  // Overtime toggle state
+  const [overtimeEnabled, setOvertimeEnabled] = useState(true);
   const [entries, setEntries] = useState([{ id: Date.now().toString(), type: 'Work', duration: 8 }]);
   const [expenseItems, setExpenseItems] = useState([]);
   const [perDiemEnabled, setPerDiemEnabled] = useState(false);
   const [perDiemDays, setPerDiemDays] = useState(1);
   const [payrollBurden, setPayrollBurden] = useState(0.092);
-  const [avgExpense, setAvgExpense] = useState(0.175);
+  const [avgExpense, setAvgExpense] = useState(0.12);
   const [profitPercent, setProfitPercent] = useState(0.30);
 
   // Track Hourly vs Salary per employee
@@ -167,15 +169,28 @@ export default function App() {
 
         {/* Hours Worked Section */}
         <div>
+          
           <div className="flex justify-between items-center mb-2">
             <h2 className="text-lg font-semibold text-white">Hours Worked</h2>
-            <button
-              onClick={addEntry}
-              className="px-3 py-1 bg-indigo-500 text-white rounded"
-            >
-              Add Entry
-            </button>
+            <div className="flex items-center space-x-2">
+              <label className="flex items-center space-x-1 text-white">
+                <input
+                  type="checkbox"
+                  checked={overtimeEnabled}
+                  onChange={() => setOvertimeEnabled(!overtimeEnabled)}
+                  className="form-checkbox"
+                />
+                <span>Overtime</span>
+              </label>
+              <button
+                onClick={addEntry}
+                className="px-3 py-1 bg-indigo-500 text-white rounded"
+              >
+                Add Entry
+              </button>
+            </div>
           </div>
+
           <HoursWorked
             entries={entries}
             onDelete={deleteEntry}

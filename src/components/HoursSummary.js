@@ -38,7 +38,7 @@ export default function HoursSummary({ entries }) {
   const totalHours = totalReg + workOt1 + workOt2 + driveOt1 + driveOt2;
 
   return (
-    <div className="p-4 bg-gray-800 rounded space-y-2">
+    <div className="p-4 rounded space-y-2 bg-transparent">
       <button
         onClick={() => setCollapsed(!collapsed)}
         className="w-full text-left text-white font-semibold"

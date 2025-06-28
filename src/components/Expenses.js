@@ -8,7 +8,7 @@ export default function Expenses({ expenseItems, onUpdateExpense, onDeleteExpens
         <div className="text-gray-500">No expenses added.</div>
       ) : (
         expenseItems.map(item => (
-          <div key={item.id} className="relative flex justify-between items-center bg-white p-2 rounded shadow h-12">
+          <div key={item.id} className="flex items-center space-x-4 p-2 bg-white rounded shadow">
             <input
               type="text"
               value={item.description}
