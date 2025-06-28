@@ -149,12 +149,12 @@ const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
                 <span>${perDiemCost.toFixed(2)}</span>
               </div>
             )}
-            {additionalExpenses > 0 && (
-              <div className="flex justify-between">
-                <span>Other Expenses</span>
-                <span>${additionalExpenses.toFixed(2)}</span>
-              </div>
-            )}
+            {expenseItems.length > 0 && expenseItems.map((item, index) => (
+                <div key={index} className="flex justify-between">
+                  <span>{item.description || 'Unknown Expense'}</span>
+                  <span>${item.cost.toFixed(2)}</span>
+                </div>
+              ))}
           </div>
         )}
       </div>
