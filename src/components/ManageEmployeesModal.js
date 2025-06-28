@@ -24,9 +24,16 @@ export default function ManageEmployeesModal({
         </div>
         <div className="space-y-2">
           {employees.map(emp => (
-            <label key={emp.id} className="flex items-center space-x-2 bg-gray-100 p-2 rounded">
-              <input type="checkbox" checked={includedMap[emp.id]} onChange={() => onToggleInclude(emp.id)} />
+            <label key={emp.id} className="flex justify-between items-center bg-gray-100 p-2 rounded">
+              <div className="flex items-center space-x-2">
+<input
+                type="checkbox"
+                checked={includedMap[emp.id]}
+                onChange={() => onToggleInclude(emp.id)}
+              />
               <span>{emp.firstName} {emp.lastName}</span>
+              </div>
+              <span className="font-medium">{'$'+emp.rate.toFixed(2)}</span>
             </label>
           ))}
         </div>
