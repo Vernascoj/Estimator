@@ -12,7 +12,7 @@ export default function EstimatorReport({
   setProfitPercent,
   driveRate,
   employeeTypes
-}) {
+, overtimeEnabled}) {
   // Separate employees by type
   const hourlyList = employees.filter(emp => employeeTypes[emp.id] === 'Hourly');
   const salaryList = employees.filter(emp => employeeTypes[emp.id] === 'Salary');
@@ -25,6 +25,13 @@ export default function EstimatorReport({
   let workReg = 0, workOt1 = 0, workOt2 = 0;
   let driveReg = 0, driveOt1 = 0, driveOt2 = 0;
   entries.forEach(e => {
+    if (!overtimeEnabled) {
+      // Count all hours as regular when overtime disabled
+      if (e.type === 'Work') workReg += e.duration;
+      else if (e.type === 'Drive') driveReg += e.duration;
+      return;
+    }
+    
     const dur = e.duration;
     let rem = dur;
     const reg = Math.min(rem, Math.max(0, 8 - cumulative)); rem -= reg;

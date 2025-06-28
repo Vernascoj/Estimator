@@ -17,6 +17,7 @@ export default function App() {
   const [driveRate, setDriveRate] = useState(17.5);
   // Overtime toggle state
   const [overtimeEnabled, setOvertimeEnabled] = useState(true);
+  // Overtime toggle state
   const [entries, setEntries] = useState([{ id: Date.now().toString(), type: 'Work', duration: 8 }]);
   const [expenseItems, setExpenseItems] = useState([]);
   const [perDiemEnabled, setPerDiemEnabled] = useState(false);
@@ -197,7 +198,7 @@ export default function App() {
             onUpdateEntry={updateEntry}
             onReorder={reorderEntries}
             overtimeEnabled
-          />
+           overtimeEnabled={overtimeEnabled}/>
           <HoursSummary entries={entries} />
         </div>
 
@@ -244,7 +245,7 @@ export default function App() {
           setProfitPercent={setProfitPercent}
           driveRate={driveRate}
           employeeTypes={employeeTypes}
-        />
+         overtimeEnabled={overtimeEnabled}/>
       </div>
     </div>
 );
