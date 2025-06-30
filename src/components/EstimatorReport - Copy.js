@@ -1,7 +1,4 @@
-import React, { useState, useRef } from 'react';
-import { Save } from 'lucide-react';
-import html2canvas from 'html2canvas';
-import jsPDF from 'jspdf';
+import React, { useState } from 'react';
 
 export default function EstimatorReport({
   entries,
@@ -14,28 +11,8 @@ export default function EstimatorReport({
   profitPercent,
   setProfitPercent,
   driveRate,
-  employeeTypes,
-  overtimeEnabled
-}) {
-  const [labCollapsed, setLabCollapsed] = useState(false);
-  const [expCollapsed, setExpCollapsed] = useState(false);
-  const [pdfMode, setPdfMode] = useState(false);
-  const reportRef = useRef();
-
-  const handleSavePdf = async () => {
-    setPdfMode(true);
-    await new Promise(resolve => setTimeout(resolve, 100));
-    if (!reportRef.current) return;
-    const canvas = await html2canvas(reportRef.current, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'pt', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('EstimatorReport.pdf');
-    setPdfMode(false);
-  };
-
+  employeeTypes
+, overtimeEnabled}) {
   // Separate employees by type
   const hourlyList = employees.filter(emp => employeeTypes[emp.id] === 'Hourly');
   const salaryList = employees.filter(emp => employeeTypes[emp.id] === 'Salary');
@@ -49,10 +26,12 @@ export default function EstimatorReport({
   let driveReg = 0, driveOt1 = 0, driveOt2 = 0;
   entries.forEach(e => {
     if (!overtimeEnabled) {
+      // Count all hours as regular when overtime disabled
       if (e.type === 'Work') workReg += e.duration;
       else if (e.type === 'Drive') driveReg += e.duration;
       return;
     }
+    
     const dur = e.duration;
     let rem = dur;
     const reg = Math.min(rem, Math.max(0, 8 - cumulative)); rem -= reg;
@@ -67,44 +46,46 @@ export default function EstimatorReport({
   });
 
   // Salary cost at flat 8 hours
-  const salaryCost = salaryList.reduce((sum, emp) => sum + emp.rate * 8, 0);
+const salaryCost = salaryList.reduce((sum, emp) => sum + emp.rate * 8, 0);
 
-  // Base cost = regular work + regular drive
-  const baseCost = workReg * empRateSumHourly + driveReg * driveRate * hourlyList.length;
+// Base cost = regular work + regular drive
+const baseCost = workReg * empRateSumHourly + driveReg * driveRate * hourlyList.length;
 
-  // Overtime cost
-  const otCost =
-    workOt1 * empRateSumHourly * 1.5 +
-    workOt2 * empRateSumHourly * 2 +
-    driveOt1 * driveRate * 1.5 * hourlyList.length +
-    driveOt2 * driveRate * 2 * hourlyList.length;
+// Overtime cost
+const otCost =
+  workOt1 * empRateSumHourly * 1.5 +
+  workOt2 * empRateSumHourly * 2 +
+  driveOt1 * driveRate * 1.5 * hourlyList.length +
+  driveOt2 * driveRate * 2 * hourlyList.length;
 
-  const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
-  const additionalExpenses = expenseItems.reduce((sum, item) => sum + item.cost, 0);
+// Per-diem & any extra line-item expenses (unchanged)
+// Per-diem & any extra line-item expenses (unchanged)
+const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
+const additionalExpenses = expenseItems.reduce((sum, item) => sum + item.cost, 0);
 
-  const laborBase = baseCost + salaryCost;
-  const costWithBurden = laborBase / (1 - payrollBurden);
-  const payrollCost = costWithBurden * payrollBurden;
+// === Load base+salary for payroll burden ===
+const laborBase = baseCost + salaryCost;
+const costWithBurden = laborBase / (1 - payrollBurden);
+const payrollCost = costWithBurden * payrollBurden;
 
-  const totalLabor = costWithBurden + otCost;
-  const baseTotal = totalLabor / (1 - (avgExpense + profitPercent));
-  const avgExpenseCost = baseTotal * avgExpense;
-  const profitValue = baseTotal * profitPercent;
-  const finalCost = baseTotal + perDiemCost + additionalExpenses;
-  const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
+// Total Labor before avg expense & profit
+const totalLabor = costWithBurden + otCost;
+
+// === Load base total for expense & profit ===
+const baseTotal = totalLabor / (1 - (avgExpense + profitPercent));
+const avgExpenseCost = baseTotal * avgExpense;
+const profitValue = baseTotal * profitPercent;
+// === Final cost including extras ===
+const finalCost = baseTotal + perDiemCost + additionalExpenses;
+// Totals
+const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
+
+  const [labCollapsed, setLabCollapsed] = useState(false);
+  const [expCollapsed, setExpCollapsed] = useState(false);
 
   return (
-    <div ref={reportRef} className="bg-gray-900 text-white p-4 rounded space-y-6">
-      <div className="flex justify-between items-center">
-        <h2 className="text-xl font-semibold">Cost Estimate</h2>
-        <button
-          onClick={handleSavePdf}
-          className="p-2 rounded hover:bg-gray-800"
-          title="Save as PDF"
-        >
-          <Save className="h-6 w-6 text-white" />
-        </button>
-      </div>
+    <div className="bg-gray-900 text-white p-4 rounded space-y-6">
+      <h2 className="text-xl font-semibold">Cost Estimate</h2>
 
       {/* Labor Section */}
       <div>
@@ -117,24 +98,28 @@ export default function EstimatorReport({
         </button>
         {!labCollapsed && (
           <div className="mt-2 ml-4 space-y-1 text-sm">
+            {/* Base Rate combining regular & drive */}
             {baseCost > 0 && (
-              <div className="flex justify-between">
-                <span>Base (Regular + Drive)</span>
-                <span>${baseCost.toFixed(2)}</span>
-              </div>
-            )}
+            <div className="flex justify-between">
+              <span>Base (Regular + Drive)</span>
+              <span>${baseCost.toFixed(2)}</span>
+            </div>
+          )}
+            {/* Show Overtime only if any */}
             {otCost > 0 && (
               <div className="flex justify-between">
                 <span>Overtime</span>
                 <span>${otCost.toFixed(2)}</span>
               </div>
             )}
+            {/* Show Salary only if any */}
             {salaryCost > 0 && (
               <div className="flex justify-between text-blue-300">
                 <span>Salary Flat</span>
                 <span>${salaryCost.toFixed(2)}</span>
               </div>
             )}
+            {/* Payroll Burden */}
             <div className="flex justify-between">
               <span>Payroll Burden ({(payrollBurden * 100).toFixed(1)}%)</span>
               <span>${payrollCost.toFixed(2)}</span>
@@ -165,11 +150,11 @@ export default function EstimatorReport({
               </div>
             )}
             {expenseItems.length > 0 && expenseItems.map((item, index) => (
-              <div key={index} className="flex justify-between">
-                <span>{item.description || 'Unknown Expense'}</span>
-                <span>${item.cost.toFixed(2)}</span>
-              </div>
-            ))}
+                <div key={index} className="flex justify-between">
+                  <span>{item.description || 'Unknown Expense'}</span>
+                  <span>${item.cost.toFixed(2)}</span>
+                </div>
+              ))}
           </div>
         )}
       </div>
@@ -178,17 +163,13 @@ export default function EstimatorReport({
       <div className="flex items-center justify-between">
         <div className="flex items-center space-x-2">
           <label>Profit %:</label>
-          {pdfMode ? (
-            <span>{(profitPercent * 100).toFixed(1)}%</span>
-          ) : (
-            <input
-              type="number"
+          <input
+            type="number"
               onFocus={e => e.target.select()}
-              className="w-16 text-black rounded px-1"
-              defaultValue={(profitPercent * 100).toFixed(1)}
-              onBlur={e => setProfitPercent(Number(e.target.value) / 100)}
-            />
-          )}
+            className="w-16 text-black rounded px-1"
+            defaultValue={(profitPercent * 100).toFixed(1)}
+            onBlur={e => setProfitPercent(Number(e.target.value) / 100)}
+          />
         </div>
         <span>Profit $: ${profitValue.toFixed(2)}</span>
       </div>
