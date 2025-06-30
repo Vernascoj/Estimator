@@ -30,10 +30,11 @@ export default function App() {
   const [employeeTypes, setEmployeeTypes] = useState({});
 
   // Employees filtered by group
-  const employeesInGroup = useMemo(
-    () => employeesData.filter(emp => emp.group === selectedGroup),
-    [selectedGroup]
-  );
+  const employeesInGroup = useMemo(() => {
+    return selectedGroup === 'All'
+      ? employeesData
+      : employeesData.filter(emp => emp.group === selectedGroup);
+  }, [selectedGroup]);
 
   // Map of which employees are included
   const [includedMap, setIncludedMap] = useState({});

@@ -8,7 +8,7 @@ export default function EmployeeTable({
   onToggleType,
   employeeTypes
 }) {
-  // Compute average hourly rate for selected employees
+  // Compute average hourly rate for displayed employees
   const averageRate = useMemo(() => {
     if (employees.length === 0) return 0;
     const total = employees.reduce((sum, emp) => sum + emp.rate, 0);
