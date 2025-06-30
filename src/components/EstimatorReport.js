@@ -88,13 +88,13 @@ const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
   const reportRef = useRef();
   const handleSavePdf = async () => {
     if (!reportRef.current) return;
-    const canvas = await html2canvas(reportRef.current, { scale: 2 });
+    const canvas = await html2canvas(document.body, { scale: 2 });
     const imgData = canvas.toDataURL('image/png');
     const pdf = new jsPDF('p', 'pt', 'a4');
     const pdfWidth = pdf.internal.pageSize.getWidth();
     const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
     pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('EstimatorReport.pdf');
+    pdf.save('FullPage.pdf');
   };
 
 
