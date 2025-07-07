@@ -36,7 +36,7 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                 } else {
                   const regHours = Math.min(dur, Math.max(0, 8 - prevCum));
                   let rem = dur - regHours;
-                  const ot1Hours = Math.min(rem, Math.max(0, 4));
+                  const ot1Hours = Math.min(rem, 4);
                   rem -= ot1Hours;
                   const ot2Hours = rem;
                   reg = regHours;
@@ -62,14 +62,12 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                           <option value="Drive">Drive</option>
                         </select>
 
-                        {/* Duration controls */}
+                        {/* Duration controls and As OT toggle inline */}
                         <div className="flex items-center space-x-1">
                           <button
                             onClick={() => onUpdateEntry(e.id, { duration: Math.max(0, dur - 1) })}
                             className="px-2 py-1 bg-gray-200 rounded"
-                          >
-                            –
-                          </button>
+                          >–</button>
                           <input
                             type="number"
                             onFocus={ev => ev.target.select()}
@@ -80,36 +78,29 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                           <button
                             onClick={() => onUpdateEntry(e.id, { duration: dur + 1 })}
                             className="px-2 py-1 bg-gray-200 rounded"
-                          >
-                            +
-                          </button>
+                          >+</button>
                           <span className="ml-2 text-black font-medium">HR</span>
+                          {/* As OT inline, text hidden on mobile */}
+                          <label className="flex items-center space-x-1 ml-4">
+                            <input
+                              type="checkbox"
+                              checked={e.straightOT || false}
+                              onChange={() => onUpdateEntry(e.id, { straightOT: !e.straightOT })}
+                            />
+                            <span className="hidden sm:inline text-sm">As OT</span>
+                          </label>
                         </div>
 
                         {/* OT labels, hidden on mobile */}
-                        <div
-                          className="hidden md:flex absolute right-44 top-1/2 -translate-y-1/2 text-xs text-red-600 flex flex-col items-end"
-                        >
+                        <div className="hidden md:flex absolute right-4 top-1/2 -translate-y-1/2 text-xs text-red-600 flex-col items-end">
                           {ot1 > 0 && <span>+{ot1} OT @ 1.5×</span>}
                           {ot2 > 0 && <span>+{ot2} OT @ 2.0×</span>}
-                        </div>
-
-                        {/* As OT toggle, moved right */}
-                        <div
-                          className="absolute right-2 sm:right-6 lg:right-20 top-1/2 -translate-y-1/2 flex items-center space-x-1"
-                        >
-                          <input
-                            type="checkbox"
-                            checked={e.straightOT || false}
-                            onChange={() => onUpdateEntry(e.id, { straightOT: !e.straightOT })}
-                          />
-                          <span className="text-sm">As OT</span>
                         </div>
 
                         {/* Delete button */}
                         <button
                           onClick={() => onDelete(e.id)}
-                          className="p-1 ml-2 sm:ml-4 hover:bg-gray-100 rounded"
+                          className="p-1 ml-2 hover:bg-gray-100 rounded"
                         >
                           <Trash2 className="h-5 w-5 text-red-500" />
                         </button>
