@@ -6,10 +6,12 @@ export default function SettingsModal({
   avgExpense,
   profitPercent,
   driveRate,
+  administrationPercent = 0.05,
   setPayrollBurden,
   setAvgExpense,
   setProfitPercent,
-  setDriveRate
+  setDriveRate,
+  setAdministrationPercent
 }) {
   return (
     <div
@@ -20,10 +22,10 @@ export default function SettingsModal({
         className="bg-white dark:bg-gray-800 p-4 rounded w-80"
         onClick={e => e.stopPropagation()}
       >
-        <h2 className="text-lg font-semibold mb-4 text-white">Settings</h2>
+        <h2 className="text-lg font-semibold mb-4 text-black dark:text-white">Settings</h2>
         <div className="space-y-3">
           <div>
-            <label className="block text-sm text-white">Payroll Burden (%)</label>
+            <label className="block text-sm text-black dark:text-white">Payroll Burden (%)</label>
             <input
               type="number"
               onFocus={e => e.target.select()}
@@ -33,7 +35,7 @@ export default function SettingsModal({
             />
           </div>
           <div>
-            <label className="block text-sm text-white">Avg Expense (%)</label>
+            <label className="block text-sm text-black dark:text-white">Avg Expense (%)</label>
             <input
               type="number"
               onFocus={e => e.target.select()}
@@ -43,7 +45,7 @@ export default function SettingsModal({
             />
           </div>
           <div>
-            <label className="block text-sm text-white">Profit Margin (%)</label>
+            <label className="block text-sm text-black dark:text-white">Profit Margin (%)</label>
             <input
               type="number"
               onFocus={e => e.target.select()}
@@ -53,12 +55,22 @@ export default function SettingsModal({
             />
           </div>
           <div>
-            <label className="block text-sm text-white">Drive Rate ($/hr)</label>
+            <label className="block text-sm text-black dark:text-white">Drive Rate ($/hr)</label>
             <input
               type="number"
               onFocus={e => e.target.select()}
               defaultValue={driveRate}
               onBlur={e => setDriveRate(Number(e.target.value))}
+              className="w-full rounded border p-1"
+            />
+          </div>
+          <div>
+            <label className="block text-sm text-black dark:text-white">Administration (%)</label>
+            <input
+              type="number"
+              onFocus={e => e.target.select()}
+              defaultValue={Math.round(administrationPercent * 100)}
+              onBlur={e => setAdministrationPercent(Number(e.target.value) / 100)}
               className="w-full rounded border p-1"
             />
           </div>

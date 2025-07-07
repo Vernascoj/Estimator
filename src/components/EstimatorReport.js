@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import React, { useState, useRef, useEffect } from 'react';
 import { Save } from 'lucide-react';
 import html2canvas from 'html2canvas';
 import jsPDF from 'jspdf';
@@ -11,197 +11,186 @@ export default function EstimatorReport({
   perDiemDays,
   payrollBurden,
   avgExpense,
-  profitPercent,
-  setProfitPercent,
+  profitPercent = 0.25,
+  setProfitPercent = () => {},
   driveRate,
-  employeeTypes
-, overtimeEnabled}) {
-  // Separate employees by type
-  const hourlyList = employees.filter(emp => employeeTypes[emp.id] === 'Hourly');
-  const salaryList = employees.filter(emp => employeeTypes[emp.id] === 'Salary');
-
-  // Sum of hourly rates
-  const empRateSumHourly = hourlyList.reduce((sum, emp) => sum + emp.rate, 0);
-
-  // Calculate hours breakdown
-  let cumulative = 0;
-  let workReg = 0, workOt1 = 0, workOt2 = 0;
+  employeeTypes,
+  overtimeEnabled,
+  administrationPercent = 0.05,
+}) {
+  // Hours breakdown
+  let cumulative = 0, workReg = 0, workOt1 = 0, workOt2 = 0;
   let driveReg = 0, driveOt1 = 0, driveOt2 = 0;
   entries.forEach(e => {
     if (!overtimeEnabled) {
-      // Count all hours as regular when overtime disabled
       if (e.type === 'Work') workReg += e.duration;
-      else if (e.type === 'Drive') driveReg += e.duration;
+      else driveReg += e.duration;
       return;
     }
-    
-    const dur = e.duration;
-    let rem = dur;
+    let rem = e.duration;
     const reg = Math.min(rem, Math.max(0, 8 - cumulative)); rem -= reg;
     const ot1 = Math.min(rem, Math.max(0, 12 - (cumulative + reg))); rem -= ot1;
     const ot2 = rem;
-    cumulative += dur;
-    if (e.type === 'Work') {
-      workReg += reg; workOt1 += ot1; workOt2 += ot2;
-    } else {
-      driveReg += reg; driveOt1 += ot1; driveOt2 += ot2;
-    }
+    cumulative += e.duration;
+    if (e.type === 'Work') { workReg += reg; workOt1 += ot1; workOt2 += ot2; }
+    else { driveReg += reg; driveOt1 += ot1; driveOt2 += ot2; }
   });
 
-  // Salary cost at flat 8 hours
-const salaryCost = salaryList.reduce((sum, emp) => sum + emp.rate * 8, 0);
+  // Salary & hourly
+  const salaryCost = employees.filter(emp => employeeTypes[emp.id] === 'Salary')
+    .reduce((sum, emp) => sum + emp.rate * 8, 0);
+  const hourlyRateSum = employees.filter(emp => employeeTypes[emp.id] === 'Hourly')
+    .reduce((sum, emp) => sum + emp.rate, 0);
 
-// Base cost = regular work + regular drive
-const baseCost = workReg * empRateSumHourly + driveReg * driveRate * hourlyList.length;
+  // Base & overtime cost
+  const baseCost = workReg * hourlyRateSum + driveReg * driveRate * hourlyRateSum;
+  const otCost =
+    workOt1 * hourlyRateSum * 1.5 +
+    workOt2 * hourlyRateSum * 2 +
+    driveOt1 * driveRate * 1.5 * hourlyRateSum +
+    driveOt2 * driveRate * 2 * hourlyRateSum;
 
-// Overtime cost
-const otCost =
-  workOt1 * empRateSumHourly * 1.5 +
-  workOt2 * empRateSumHourly * 2 +
-  driveOt1 * driveRate * 1.5 * hourlyList.length +
-  driveOt2 * driveRate * 2 * hourlyList.length;
+  // Local expense state with enabled flags
+  const [localItems, setLocalItems] = useState(() =>
+    expenseItems.map(item => ({ ...item, enabled: true }))
+  );
 
-// Per-diem & any extra line-item expenses (unchanged)
-// Per-diem & any extra line-item expenses (unchanged)
-const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
-const additionalExpenses = expenseItems.reduce((sum, item) => sum + item.cost, 0);
+  // Sync incoming expenseItems: preserve existing enabled flags, add new ones
+  useEffect(() => {
+    setLocalItems(current => {
+      return expenseItems.map((item, idx) => {
+        const existing = current[idx];
+        return {
+          enabled: existing ? existing.enabled : true,
+          description: item.description || (existing && existing.description) || 'Additional Expense',
+          cost: item.cost !== undefined ? item.cost : (existing && existing.cost) || 0
+        };
+      });
+    });
+  }, [expenseItems]);
 
-// === Load base+salary for payroll burden ===
-const laborBase = baseCost + salaryCost;
-const costWithBurden = laborBase / (1 - payrollBurden);
-const payrollCost = costWithBurden * payrollBurden;
-
-// Total Labor before avg expense & profit
-const totalLabor = costWithBurden + otCost;
-
-// === Load base total for expense & profit ===
-const baseTotal = totalLabor / (1 - (avgExpense + profitPercent));
-const avgExpenseCost = baseTotal * avgExpense;
-const profitValue = baseTotal * profitPercent;
-// === Final cost including extras ===
-const finalCost = baseTotal + perDiemCost + additionalExpenses;
-// Totals
-const totalExpenses = avgExpenseCost + perDiemCost + additionalExpenses;
-
-  const [labCollapsed, setLabCollapsed] = useState(false);
-  const [expCollapsed, setExpCollapsed] = useState(false);
-  const reportRef = useRef();
-  const handleSavePdf = async () => {
-    if (!reportRef.current) return;
-    const canvas = await html2canvas(document.body, { scale: 2 });
-    const imgData = canvas.toDataURL('image/png');
-    const pdf = new jsPDF('p', 'pt', 'a4');
-    const pdfWidth = pdf.internal.pageSize.getWidth();
-    const pdfHeight = (canvas.height * pdfWidth) / canvas.width;
-    pdf.addImage(imgData, 'PNG', 0, 0, pdfWidth, pdfHeight);
-    pdf.save('FullPage.pdf');
+  const toggleItem = idx => {
+    setLocalItems(items =>
+      items.map((it, i) =>
+        i === idx ? { ...it, enabled: !it.enabled } : it
+      )
+    );
   };
 
+  // Compute expenses
+  const additionalRawCost = localItems.reduce((sum, it) => sum + (it.enabled ? it.cost : 0), 0);
+  const uncheckedCost = localItems.reduce((sum, it) => sum + (!it.enabled ? it.cost : 0), 0);
+
+  // Per-diem cost
+  const perDiemCost = perDiemEnabled ? employees.length * perDiemDays * 50 : 0;
+
+  // Labor after burden
+  const laborBase = baseCost + salaryCost;
+  const laborMarkupBase = laborBase / (1 - payrollBurden);
+  const totalLabor = laborMarkupBase + otCost;
+
+  // Base totals
+  const baseTotal = totalLabor / (1 - (avgExpense + profitPercent + administrationPercent));
+  const avgExpenseCost = baseTotal * avgExpense;
+  const adminCost = baseTotal * administrationPercent;
+  const baseProfit = baseTotal * profitPercent;
+
+  // Additional profit
+  const additionalProfit = additionalRawCost * profitPercent;
+  const totalProfit = baseProfit + additionalProfit;
+
+  // Final totals
+  const finalCost =
+    baseTotal + perDiemCost + uncheckedCost + additionalRawCost * (1 + profitPercent);
+  const totalExpenses =
+    avgExpenseCost + perDiemCost + adminCost + uncheckedCost + additionalRawCost;
+
+  // UI state for expand/collapse
+  const [labOpen, setLabOpen] = useState(false);
+  const [expOpen, setExpOpen] = useState(false);
+  const reportRef = useRef();
+
+  // PDF export
+  const savePdf = async () => {
+    if (!reportRef.current) return;
+    const canvas = await html2canvas(reportRef.current, { scale: 2 });
+    const img = canvas.toDataURL('image/png');
+    const pdf = new jsPDF('p', 'pt', 'a4');
+    const w = pdf.internal.pageSize.getWidth();
+    const h = (canvas.height * w) / canvas.width;
+    pdf.addImage(img, 'PNG', 0, 0, w, h);
+    pdf.save('Estimate.pdf');
+  };
 
   return (
-    <div className="bg-gray-900 text-white p-4 rounded space-y-6" ref={reportRef}>
+    <div ref={reportRef} className="bg-gray-900 text-white p-4 rounded space-y-6">
+      {/* Header */}
       <div className="flex justify-between items-center">
         <h2 className="text-xl font-semibold">Cost Estimate</h2>
-        <button
-          onClick={handleSavePdf}
-          className="p-2 rounded hover:bg-gray-800"
-          title="Save as PDF"
-        >
+        <button onClick={savePdf} title="Save PDF" className="p-2 rounded hover:bg-gray-800">
           <Save className="h-6 w-6 text-white" />
         </button>
       </div>
 
-      {/* Labor Section */}
+      {/* Labor */}
       <div>
-        <button
-          className="w-full flex justify-between items-center bg-gray-800 p-3 rounded"
-          onClick={() => setLabCollapsed(!labCollapsed)}
-        >
-          <span>{labCollapsed ? '+ Total Labor' : '- Total Labor'}</span>
+        <button onClick={() => setLabOpen(!labOpen)} className="w-full flex justify-between bg-gray-800 p-3 rounded">
+          <span>{labOpen ? '+ Total Labor' : '- Total Labor'}</span>
           <span>${totalLabor.toFixed(2)}</span>
         </button>
-        {!labCollapsed && (
-          <div className="mt-2 ml-4 space-y-1 text-sm">
-            {/* Base Rate combining regular & drive */}
-            {baseCost > 0 && (
-            <div className="flex justify-between">
-              <span>Base (Regular + Drive)</span>
-              <span>${baseCost.toFixed(2)}</span>
-            </div>
-          )}
-            {/* Show Overtime only if any */}
-            {otCost > 0 && (
-              <div className="flex justify-between">
-                <span>Overtime</span>
-                <span>${otCost.toFixed(2)}</span>
-              </div>
-            )}
-            {/* Show Salary only if any */}
-            {salaryCost > 0 && (
-              <div className="flex justify-between text-blue-300">
-                <span>Salary Flat</span>
-                <span>${salaryCost.toFixed(2)}</span>
-              </div>
-            )}
-            {/* Payroll Burden */}
-            <div className="flex justify-between">
-              <span>Payroll Burden ({(payrollBurden * 100).toFixed(1)}%)</span>
-              <span>${payrollCost.toFixed(2)}</span>
-            </div>
+        {labOpen && (
+          <div className="mt-2 ml-4 text-sm space-y-1">
+            <div className="flex justify-between"><span>Base</span><span>${baseCost.toFixed(2)}</span></div>
+            {otCost > 0 && <div className="flex justify-between"><span>Overtime</span><span>${otCost.toFixed(2)}</span></div>}
+            {salaryCost > 0 && <div className="flex justify-between text-blue-300"><span>Salary</span><span>${salaryCost.toFixed(2)}</span></div>}
+            <div className="flex justify-between"><span>Burden ({(payrollBurden*100).toFixed(1)}%)</span><span>${(laborMarkupBase*payrollBurden).toFixed(2)}</span></div>
           </div>
         )}
       </div>
 
-      {/* Expenses Section */}
+      {/* Expenses */}
       <div>
-        <button
-          className="w-full flex justify-between items-center bg-gray-800 p-3 rounded"
-          onClick={() => setExpCollapsed(!expCollapsed)}
-        >
-          <span>{expCollapsed ? '+ Total Expenses' : '- Total Expenses'}</span>
+        <button onClick={() => setExpOpen(!expOpen)} className="w-full flex justify-between bg-gray-800 p-3 rounded">
+          <span>{expOpen ? '+ Total Expenses' : '- Total Expenses'}</span>
           <span>${totalExpenses.toFixed(2)}</span>
         </button>
-        {!expCollapsed && (
-          <div className="mt-2 ml-4 space-y-1 text-sm">
-            <div className="flex justify-between">
-              <span>Avg Expense ({(avgExpense * 100).toFixed(1)}%)</span>
-              <span>${avgExpenseCost.toFixed(2)}</span>
-            </div>
-            {perDiemCost > 0 && (
-              <div className="flex justify-between">
-                <span>Per Diem</span>
-                <span>${perDiemCost.toFixed(2)}</span>
+        {expOpen && (
+          <div className="mt-2 ml-4 text-sm space-y-1">
+            {/* Avg Expense */}
+            <div className="flex justify-between"><span>Avg Expense ({(avgExpense*100).toFixed(1)}%)</span><span>${avgExpenseCost.toFixed(2)}</span></div>
+            {/* Per Diem */}
+            {perDiemCost > 0 && <div className="flex justify-between"><span>Per Diem</span><span>${perDiemCost.toFixed(2)}</span></div>}
+            {/* Administration */}
+            <div className="flex justify-between"><span>Administration ({(administrationPercent*100).toFixed(1)}%)</span><span>${adminCost.toFixed(2)}</span></div>
+            {/* Individual Additional Expenses */}
+            {localItems.map((item, i) => (
+              <div key={i} className="flex justify-between items-center">
+                <label className="flex items-center">
+                  <input
+                    type="checkbox"
+                    className="mr-2"
+                    checked={item.enabled}
+                    onChange={() => toggleItem(i)}
+                  />
+                  <span>{item.description || 'Additional Expense'}</span>
+                </label>
+                <span>${item.cost.toFixed(2)}</span>
               </div>
-            )}
-            {expenseItems.length > 0 && expenseItems.map((item, index) => (
-                <div key={index} className="flex justify-between">
-                  <span>{item.description || 'Unknown Expense'}</span>
-                  <span>${item.cost.toFixed(2)}</span>
-                </div>
-              ))}
+            ))}
           </div>
         )}
       </div>
 
       {/* Profit & Total */}
       <div className="flex items-center justify-between">
-        <div className="flex items-center space-x-2">
-          <label>Profit %:</label>
-          <input
-            type="number"
-              onFocus={e => e.target.select()}
-            className="w-16 text-black rounded px-1"
-            defaultValue={(profitPercent * 100).toFixed(1)}
-            onBlur={e => setProfitPercent(Number(e.target.value) / 100)}
-          />
-        </div>
-        <span>Profit $: ${profitValue.toFixed(2)}</span>
+        <div className="flex items-center space-x-2"><label>Profit:</label><input type="number" onFocus={e => e.target.select()} defaultValue={(profitPercent*100).toFixed(1)} onBlur={e => setProfitPercent(Number(e.target.value)/100)} className="w-16 text-black rounded px-1"/></div>
+        <div className="flex flex-col items-end"><span>${totalProfit.toFixed(2)}</span>{additionalProfit>0 && <span className="text-sm text-gray-400">(+${additionalProfit.toFixed(2)})</span>}</div>
       </div>
-      <hr className="border-gray-700" />
-      <div className="flex justify-between text-2xl font-bold">
-        <span>Total Cost:</span>
-        <span>${finalCost.toFixed(2)}</span>
-      </div>
+
+      <hr className="border-gray-700"/>
+
+      {/* Final Total */}
+      <div className="flex justify-between text-2xl font-bold"><span>Total Cost:</span><span>${finalCost.toFixed(2)}</span></div>
     </div>
   );
 }
