@@ -1,49 +1,43 @@
 import React, { useState } from 'react';
 
-export default function HoursSummary({ entries , overtimeEnabled}) {
+export default function HoursSummary({ entries, overtimeEnabled }) {
   const [collapsed, setCollapsed] = useState(true);
 
-  // Calculate totals
   let cumulative = 0;
   let workReg = 0, workOt1 = 0, workOt2 = 0;
   let driveReg = 0, driveOt1 = 0, driveOt2 = 0;
 
   entries.forEach(e => {
-    if (!overtimeEnabled) {
-      // All hours as regular when overtime disabled
-      if (e.type === 'Work') workReg += e.duration;
-      else if (e.type === 'Drive') driveReg += e.duration;
-      cumulative += e.duration;
-      return;
-    }
-    
     const dur = e.duration;
-    let rem = dur;
-    // regular
-    const reg = Math.min(rem, Math.max(0, 8 - cumulative));
-    rem -= reg;
-    // OT1
-    const ot1 = Math.min(rem, Math.max(0, 12 - (cumulative + reg)));
-    rem -= ot1;
-    // OT2
-    const ot2 = rem;
-    cumulative += dur;
-
-    if (e.type === 'Work') {
-      workReg += reg;
-      workOt1 += ot1;
-      workOt2 += ot2;
+    if (!overtimeEnabled) {
+      if (e.type === 'Work') workReg += dur;
+      else driveReg += dur;
+      cumulative += dur;
     } else {
-      driveReg += reg;
-      driveOt1 += ot1;
-      driveOt2 += ot2;
+      const prevCum = cumulative;
+      cumulative += dur;
+
+      if (e.straightOT) {
+        if (e.type === 'Work') workOt1 += dur;
+        else driveOt1 += dur;
+      } else {
+        const regH = Math.min(dur, Math.max(0, 8 - prevCum));
+        let rem = dur - regH;
+        const ot1 = Math.min(rem, Math.max(0, 12 - (prevCum + regH)));
+        rem -= ot1;
+        const ot2 = rem;
+        if (e.type === 'Work') {
+          workReg += regH;
+          workOt1 += ot1;
+          workOt2 += ot2;
+        } else {
+          driveReg += regH;
+          driveOt1 += ot1;
+          driveOt2 += ot2;
+        }
+      }
     }
   });
-
-  const workTotal = workReg + workOt1 + workOt2;
-  const driveTotal = driveReg + driveOt1 + driveOt2;
-  const totalReg = workReg + driveReg;
-  const totalHours = totalReg + workOt1 + workOt2 + driveOt1 + driveOt2;
 
   return (
     <div className="p-4 rounded space-y-2 bg-transparent">
@@ -54,29 +48,18 @@ export default function HoursSummary({ entries , overtimeEnabled}) {
         Hours Summary {collapsed ? '+' : '-'}
       </button>
       {!collapsed && (
-        <div className="text-white space-y-2">
+        <div className="text-white space-y-2 text-sm">
           <div>
-            <span className="font-medium">Work:</span> {workTotal} hr
-            {(workOt1 > 0 || workOt2 > 0) && (
-              <span> (
-                {workOt1 > 0 && `+${workOt1} OT @1.5x${workOt2 > 0 ? ', ' : ''}`}
-                {workOt2 > 0 && `+${workOt2} OT @2.0x`}
-              )</span>
-            )}
+            <span className="font-medium">Work:</span> {workReg + workOt1 + workOt2} hr
+            {workOt1 > 0 && <span> (+{workOt1} OT @1.5×)</span>}
+            {workOt2 > 0 && <span> (+{workOt2} OT @2.0×)</span>}
           </div>
           <div>
-            <span className="font-medium">Drive:</span> {driveTotal} hr
-            {(driveOt1 > 0 || driveOt2 > 0) && (
-              <span> (
-                {driveOt1 > 0 && `+${driveOt1} OT @1.5x${driveOt2 > 0 ? ', ' : ''}`}
-                {driveOt2 > 0 && `+${driveOt2} OT @2.0x`}
-              )</span>
-            )}
+            <span className="font-medium">Drive:</span> {driveReg + driveOt1 + driveOt2} hr
+            {driveOt1 > 0 && <span> (+{driveOt1} OT @1.5×)</span>}
+            {driveOt2 > 0 && <span> (+{driveOt2} OT @2.0×)</span>}
           </div>
           <hr className="border-gray-700" />
-          <div>
-            <span className="font-medium">Total:</span> {totalHours} hr
-          </div>
         </div>
       )}
     </div>

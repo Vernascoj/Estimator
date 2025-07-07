@@ -18,7 +18,7 @@ export default function App() {
   // Overtime toggle state
   const [overtimeEnabled, setOvertimeEnabled] = useState(true);
   // Overtime toggle state
-  const [entries, setEntries] = useState([{ id: Date.now().toString(), type: 'Work', duration: 8 }]);
+  const [entries, setEntries] = useState([{ id: Date.now().toString(), type: 'Work', duration: 8, straightOT: false }]);
   const [expenseItems, setExpenseItems] = useState([]);
   const [perDiemEnabled, setPerDiemEnabled] = useState(false);
   const [perDiemDays, setPerDiemDays] = useState(1);
@@ -87,8 +87,7 @@ export default function App() {
   );
 
   // Entry handlers
-  const addEntry = () =>
-    setEntries(prev => [...prev, { id: Date.now().toString(), type: 'Work', duration: 0 }]);
+  const addEntry = () => setEntries(prev => [...prev, { id: Date.now().toString(), type: 'Work', duration: 0, straightOT: false }]);
   const deleteEntry = id =>
     setEntries(prev => prev.filter(e => e.id !== id));
   const reorderEntries = list => setEntries(list);
