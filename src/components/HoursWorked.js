@@ -17,7 +17,11 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
         {(provided) => {
           let cumulative = 0;
           return (
-            <div ref={provided.innerRef} {...provided.droppableProps} className="space-y-2">
+            <div
+              ref={provided.innerRef}
+              {...provided.droppableProps}
+              className="space-y-2"
+            >
               {entries.map((e, index) => {
                 const dur = e.duration;
                 const prevCum = cumulative;
@@ -32,10 +36,12 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                 } else {
                   const regHours = Math.min(dur, Math.max(0, 8 - prevCum));
                   let rem = dur - regHours;
-                  ot1 = Math.min(rem, Math.max(0, 12 - (prevCum + regHours)));
-                  rem -= ot1;
-                  ot2 = rem;
+                  const ot1Hours = Math.min(rem, Math.max(0, 4));
+                  rem -= ot1Hours;
+                  const ot2Hours = rem;
                   reg = regHours;
+                  ot1 = ot1Hours;
+                  ot2 = ot2Hours;
                 }
 
                 return (
@@ -61,7 +67,9 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                           <button
                             onClick={() => onUpdateEntry(e.id, { duration: Math.max(0, dur - 1) })}
                             className="px-2 py-1 bg-gray-200 rounded"
-                          >–</button>
+                          >
+                            –
+                          </button>
                           <input
                             type="number"
                             onFocus={ev => ev.target.select()}
@@ -72,18 +80,24 @@ export default function HoursWorked({ entries, onDelete, onUpdateEntry, onReorde
                           <button
                             onClick={() => onUpdateEntry(e.id, { duration: dur + 1 })}
                             className="px-2 py-1 bg-gray-200 rounded"
-                          >+</button>
+                          >
+                            +
+                          </button>
                           <span className="ml-2 text-black font-medium">HR</span>
                         </div>
 
-                        {/* OT labels positioned between input and toggle */}
-                        <div className="absolute right-44 top-1/2 -translate-y-1/2 text-xs text-red-600 flex flex-col items-end">
+                        {/* OT labels, hidden on mobile */}
+                        <div
+                          className="hidden md:flex absolute right-44 top-1/2 -translate-y-1/2 text-xs text-red-600 flex flex-col items-end"
+                        >
                           {ot1 > 0 && <span>+{ot1} OT @ 1.5×</span>}
                           {ot2 > 0 && <span>+{ot2} OT @ 2.0×</span>}
                         </div>
 
-                        {/* As OT toggle */}
-                        <div className="absolute right-20 top-1/2 -translate-y-1/2 flex items-center space-x-1">
+                        {/* As OT toggle, moved right */}
+                        <div
+                          className="absolute right-2 sm:right-6 lg:right-20 top-1/2 -translate-y-1/2 flex items-center space-x-1"
+                        >
                           <input
                             type="checkbox"
                             checked={e.straightOT || false}
